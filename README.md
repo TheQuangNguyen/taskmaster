@@ -14,5 +14,5 @@ This android app will track all the tasks that a user need to do and allow user 
 
 ### Images
 
-![Home Page](screenshots/home_page.png)
+![Home Page](screenshots/home-page.png)
 
