@@ -1,4 +1,4 @@
-package com.example.taskmaster;
+package com.thequangnguyen.taskmaster;
 
 import org.junit.Test;
 
