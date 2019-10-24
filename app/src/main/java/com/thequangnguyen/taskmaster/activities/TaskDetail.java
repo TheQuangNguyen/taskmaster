@@ -1,9 +1,11 @@
-package com.thequangnguyen.taskmaster;
+package com.thequangnguyen.taskmaster.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.widget.TextView;
+
+import com.thequangnguyen.taskmaster.R;
 
 public class TaskDetail extends AppCompatActivity {
 

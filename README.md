@@ -14,7 +14,7 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-![Home Page](screenshots/home-page.PNG)
+<img src="screenshots/home-page.PNG">
 
 ### Wednesday 10/23/2019
 
@@ -26,4 +26,16 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-![Task Detail](screenshots/task-detail.PNG)
+<img src="screenshots/task-detail.PNG">
+
+### Thursday 10/24/2019 
+
+#### What I Worked On
+
+* Create a Task class. A Task should have a title, a body, and a state. The state should be one of “new”, “assigned”, “in progress”, or “complete”.
+* Refactor my homepage to use a RecyclerView for displaying Task data. This has hardcoded Task data for now
+* Ensure that you can tap on any one of the Tasks in the RecyclerView, and it will appropriately launch the detail page with the correct Task title displayed.
+
+#### Images
+
+<img src="screenshots/recycler-home-page.PNG">
