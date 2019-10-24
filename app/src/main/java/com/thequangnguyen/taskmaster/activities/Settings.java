@@ -1,4 +1,4 @@
-package com.thequangnguyen.taskmaster;
+package com.thequangnguyen.taskmaster.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+
+import com.thequangnguyen.taskmaster.R;
 
 public class Settings extends AppCompatActivity {
 
