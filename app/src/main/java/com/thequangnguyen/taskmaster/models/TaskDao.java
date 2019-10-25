@@ -14,8 +14,8 @@ public interface TaskDao {
     @Query("SELECT * FROM task")
     List<Task> getAll();
 
-    @Query("SELECT * FROM task WHERE state=:state")
-    List<Task> getTasksByState(String state);
+    @Query("SELECT * FROM task WHERE id=:id")
+    Task getTasksById(long id);
 
     @Insert
     void addTask(Task task);

@@ -39,3 +39,13 @@ This android app will track all the tasks that a user need to do and allow user 
 #### Images
 
 <img src="screenshots/recycler-home-page.PNG">
+
+### Friday 10/25/2019 
+
+#### What I Worked On
+
+* Modify Task class to be an Entity
+* Set up Room in my application
+* Modify my Add Task form to save the data entered in as a Task in my local database
+* Refactor my homepage's RecyclerView to display all Task entities in my database
+

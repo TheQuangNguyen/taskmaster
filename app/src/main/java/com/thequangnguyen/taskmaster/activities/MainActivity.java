@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     @Override
     public void redirectToTaskDetailPage(Task task) {
         Intent taskDetailIntent = new Intent(this, TaskDetail.class);
-        taskDetailIntent.putExtra("taskTitle", task.getTitle());
+        taskDetailIntent.putExtra("taskId", "" + task.getId());
         startActivity(taskDetailIntent);
     }
 }
