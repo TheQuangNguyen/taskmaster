@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.thequangnguyen.taskmaster.R;
+import com.thequangnguyen.taskmaster.models.AppDatabase;
 import com.thequangnguyen.taskmaster.models.Task;
 import com.thequangnguyen.taskmaster.models.TaskAdapter;
 
@@ -24,16 +26,19 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
     private static final String TAG = "MainActivity";
     private List<Task> tasks;
+    public AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        this.tasks = new LinkedList<>();
-        tasks.add(new Task("Create a Task class", "A Task should have title, body, and a state", "complete"));
-        tasks.add(new Task("Use RecyclerView for displaying task data", "hardcoded tasks for now", "in progress"));
-        tasks.add(new Task("Create a ViewAdapter class", "displays data from a list of tasks", "in progress"));
+        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "taskmaster")
+                .allowMainThreadQueries().build();
+        this.tasks = db.taskDao().getAll();
+//        tasks.add(new Task("Create a Task class", "A Task should have title, body, and a state", "complete"));
+//        tasks.add(new Task("Use RecyclerView for displaying task data", "hardcoded tasks for now", "in progress"));
+//        tasks.add(new Task("Create a ViewAdapter class", "displays data from a list of tasks", "in progress"));
 
         RecyclerView recyclerView = findViewById(R.id.recycler_tasks);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -88,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     @Override
     public void redirectToTaskDetailPage(Task task) {
         Intent taskDetailIntent = new Intent(this, TaskDetail.class);
-        taskDetailIntent.putExtra("taskTitle", task.getTitle());
+        taskDetailIntent.putExtra("taskId", "" + task.getId());
         startActivity(taskDetailIntent);
     }
 }
