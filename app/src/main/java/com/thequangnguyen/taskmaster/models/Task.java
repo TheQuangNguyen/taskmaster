@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey;
 @Entity
 public class Task {
     @PrimaryKey(autoGenerate = true)
+    private long localId;
     private long id;
     private String title;
     private String body;
@@ -16,6 +17,8 @@ public class Task {
         this.body = body;
         this.state = state;
     }
+
+    public Task() {}
 
     public String getTitle() {
         return title;
@@ -47,6 +50,14 @@ public class Task {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getLocalId() {
+        return localId;
+    }
+
+    public void setLocalId(long localId) {
+        this.localId = localId;
     }
 
     @Override
