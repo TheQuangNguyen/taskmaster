@@ -49,3 +49,10 @@ This android app will track all the tasks that a user need to do and allow user 
 * Modify my Add Task form to save the data entered in as a Task in my local database
 * Refactor my homepage's RecyclerView to display all Task entities in my database
 
+### Tuesday 10/29/2019
+
+#### What I Worked On
+
+* Make a request to the backend server when user gets to the home page to fetch Task data. Afterward, display that Task data in my RecyclerView.
+* Modify my Add Task form to post the entered task to the server 
+* Ensure that the homepage refreshes the Tasks shown after a Task has been added.
