@@ -17,6 +17,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.amazonaws.amplify.generated.graphql.CreateTaskMutation;
+import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.exception.ApolloException;
 import com.thequangnguyen.taskmaster.R;
 import com.thequangnguyen.taskmaster.models.AppDatabase;
 import com.thequangnguyen.taskmaster.models.Task;
@@ -32,26 +39,41 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import type.CreateTaskInput;
 
 import com.google.gson.Gson;
+
+import javax.annotation.Nonnull;
 
 public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTaskInteractionListener {
 
     private static final String TAG = "MainActivity";
     private List<Task> tasks;
     public AppDatabase db;
+    RecyclerView recyclerView;
+    AWSAppSyncClient awsAppSyncClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url("http://taskmaster-api.herokuapp.com/tasks")
+        // connect to AWS
+        awsAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
 
-        client.newCall(request).enqueue(new GetTasksFromBackendServer(this));
+        queryAllTasks();
+
+//        OkHttpClient client = new OkHttpClient();
+//        Request request = new Request.Builder()
+//                .url("http://taskmaster-api.herokuapp.com/tasks")
+//                .build();
+//
+//        client.newCall(request).enqueue(new GetTasksFromBackendServer(this));
+
+
 
 //        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "taskmaster")
 //                .allowMainThreadQueries().build();
@@ -60,9 +82,9 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 //        tasks.add(new Task("Use RecyclerView for displaying task data", "hardcoded tasks for now", "in progress"));
 //        tasks.add(new Task("Create a ViewAdapter class", "displays data from a list of tasks", "in progress"));
 
-//        RecyclerView recyclerView = findViewById(R.id.recycler_tasks);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        recyclerView.setAdapter(new TaskAdapter(this.tasks, this));
+        recyclerView = findViewById(R.id.recycler_tasks);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new TaskAdapter(this.tasks, this));
     }
 
     @Override
@@ -92,13 +114,15 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
         } else {
             myTaskTitle.setText("" + username + "'s Tasks");
         }
+        
+        queryAllTasks();
 
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url("http://taskmaster-api.herokuapp.com/tasks")
-                .build();
-
-        client.newCall(request).enqueue(new GetTasksFromBackendServer(this));
+//        OkHttpClient client = new OkHttpClient();
+//        Request request = new Request.Builder()
+//                .url("http://taskmaster-api.herokuapp.com/tasks")
+//                .build();
+//
+//        client.newCall(request).enqueue(new GetTasksFromBackendServer(this));
     }
 
     public void redirectToAddTaskActivity(View view) {
@@ -166,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
                         }
                     }
                     mainActivityInstance.tasks = db.taskDao().getAll();
-                    RecyclerView recyclerView = findViewById(R.id.recycler_tasks);
+                    recyclerView = findViewById(R.id.recycler_tasks);
                     recyclerView.setLayoutManager(new LinearLayoutManager(mainActivityInstance));
                     recyclerView.setAdapter(new TaskAdapter(mainActivityInstance.tasks, mainActivityInstance));
                 }
@@ -175,4 +199,39 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
             completeMessage.sendToTarget();
         }
     }
+
+    ////////////////////////// AWS GraphQL methods ////////////////////////////
+
+    // Query dynamo db
+    public void queryAllTasks() {
+        awsAppSyncClient.query(ListTasksQuery.builder().build())
+                .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK)
+                .enqueue(getAllTasksCallback);
+    }
+
+    // callback for get all tasks
+    public GraphQLCall.Callback<ListTasksQuery.Data> getAllTasksCallback = new GraphQLCall.Callback<ListTasksQuery.Data>() {
+        @Override
+        public void onResponse(@Nonnull final com.apollographql.apollo.api.Response<ListTasksQuery.Data> response) {
+            Log.i("graphqlgetall" , response.data().listTasks().items().toString());
+            Handler handlerForMainThread = new Handler(Looper.getMainLooper()) {
+                @Override
+                public void handleMessage(Message inputMessage) {
+                    List<ListTasksQuery.Item> DBTasks = response.data().listTasks().items();
+                    tasks.clear();
+                    for (ListTasksQuery.Item task: DBTasks) {
+                        tasks.add(new Task(task));
+                    }
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }
+            };
+
+            handlerForMainThread.obtainMessage().sendToTarget();
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    };
 }

@@ -3,10 +3,12 @@ package com.thequangnguyen.taskmaster.models;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
+
 @Entity
 public class Task {
     @PrimaryKey(autoGenerate = true)
-    private long localId;
+//    private long localId;
     private long id;
     private String title;
     private String body;
@@ -16,6 +18,12 @@ public class Task {
         this.title = title;
         this.body = body;
         this.state = state;
+    }
+
+    public Task(ListTasksQuery.Item task) {
+        this.title = task.title();
+        this.body = task.body();
+        this.state = task.state();
     }
 
     public Task() {}
@@ -52,13 +60,13 @@ public class Task {
         this.id = id;
     }
 
-    public long getLocalId() {
-        return localId;
-    }
-
-    public void setLocalId(long localId) {
-        this.localId = localId;
-    }
+//    public long getLocalId() {
+////        return localId;
+////    }
+////
+////    public void setLocalId(long localId) {
+////        this.localId = localId;
+////    }
 
     @Override
     public String toString() {

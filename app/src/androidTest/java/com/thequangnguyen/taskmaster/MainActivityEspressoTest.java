@@ -17,6 +17,4 @@ public class MainActivityEspressoTest {
     @Rule
     public ActivityTestRule<MainActivity> activityRule = new ActivityTestRule<>(MainActivity.class);
 
-    @Test
-    public void 
 }
