@@ -19,8 +19,10 @@ import android.widget.TextView;
 
 import com.amazonaws.amplify.generated.graphql.CreateTaskMutation;
 import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
+import com.amazonaws.amplify.generated.graphql.OnCreateTaskSubscription;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
 import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.exception.ApolloException;
@@ -32,6 +34,7 @@ import com.thequangnguyen.taskmaster.models.TaskAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import okhttp3.Call;
@@ -52,11 +55,14 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     public AppDatabase db;
     RecyclerView recyclerView;
     AWSAppSyncClient awsAppSyncClient;
+    TaskAdapter taskAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        this.tasks = new LinkedList<>();
 
         // connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
@@ -64,7 +70,10 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
                 .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
 
-        queryAllTasks();
+        recyclerView = findViewById(R.id.recycler_tasks);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        this.taskAdapter = new TaskAdapter(this.tasks, this);
+        recyclerView.setAdapter(taskAdapter);
 
 //        OkHttpClient client = new OkHttpClient();
 //        Request request = new Request.Builder()
@@ -81,10 +90,6 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 //        tasks.add(new Task("Create a Task class", "A Task should have title, body, and a state", "complete"));
 //        tasks.add(new Task("Use RecyclerView for displaying task data", "hardcoded tasks for now", "in progress"));
 //        tasks.add(new Task("Create a ViewAdapter class", "displays data from a list of tasks", "in progress"));
-
-        recyclerView = findViewById(R.id.recycler_tasks);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new TaskAdapter(this.tasks, this));
     }
 
     @Override
@@ -95,12 +100,12 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 //            tasks.add(new Task(newTask.getStringExtra("taskTitle"), newTask.getStringExtra("taskDescription"),"new"));
 //        }
 
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url("http://taskmaster-api.herokuapp.com/tasks")
-                .build();
-
-        client.newCall(request).enqueue(new GetTasksFromBackendServer(this));
+//        OkHttpClient client = new OkHttpClient();
+//        Request request = new Request.Builder()
+//                .url("http://taskmaster-api.herokuapp.com/tasks")
+//                .build();
+//
+//        client.newCall(request).enqueue(new GetTasksFromBackendServer(this));
     }
 
     @Override
@@ -114,8 +119,32 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
         } else {
             myTaskTitle.setText("" + username + "'s Tasks");
         }
-        
+
+        // run graphql query for all tasks
         queryAllTasks();
+
+        // subscribe to future updates
+        OnCreateTaskSubscription subscription = OnCreateTaskSubscription.builder().build();
+        awsAppSyncClient.subscribe(subscription).execute(new AppSyncSubscriptionCall.Callback<OnCreateTaskSubscription.Data>() {
+            @Override
+            public void onResponse(@Nonnull com.apollographql.apollo.api.Response<OnCreateTaskSubscription.Data> response) {
+                // AWS call this method when a new Task is created
+                Task newTask = new Task(response.data().onCreateTask().title(), response.data().onCreateTask().body(), response.data().onCreateTask().state());
+                taskAdapter.addTask(newTask);
+
+            }
+
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, e.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                // call this once when you subscribe
+                Log.i(TAG, "subscribed to task");
+            }
+        });
 
 //        OkHttpClient client = new OkHttpClient();
 //        Request request = new Request.Builder()

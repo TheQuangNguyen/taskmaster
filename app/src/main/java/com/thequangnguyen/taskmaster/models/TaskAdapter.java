@@ -24,6 +24,10 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         this.listener = listener;
     }
 
+    public void addTask(Task task) {
+        this.tasks.add(0, task);
+    }
+
     public static class TaskViewHolder extends RecyclerView.ViewHolder {
 
         Task task;
@@ -47,7 +51,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 listener.redirectToTaskDetailPage(holder.task);
             }
         });
-                return holder;
+        return holder;
     }
 
     @Override
