@@ -64,3 +64,11 @@ This android app will track all the tasks that a user need to do and allow user 
 * Update all references to the Task data to instead use AWS Amplify to access the data in DynamoDB instead of in Room. 
 * Modify my Add Task form to save the data entered in as a Task to DynamoDB
 * Refactor my homepage's RecyclerView to display all Task entities in DynamoDB
+
+### Thursday 10/31/2019
+
+#### What I Worked On
+
+* Create a second entity for a team, which has a name and a list of tasks. Update my tasks to be owned by a team.
+* Modify my Add Task form to include Radio Buttons for which team that task belongs to.
+* In addition to a username, added Radio Buttons to allow the user to choose their team on the Settings page. Use that Team to display only that team’s tasks on the homepage.
