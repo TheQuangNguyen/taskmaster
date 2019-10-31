@@ -31,4 +31,47 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:onClick="saveUsernameToSharedPreferences"/>
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="0dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/username_input">
+
+        <RadioButton
+            android:id="@+id/radio_team1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onTeamRadioButtonClicked"
+            android:paddingRight="20dp"
+            android:text="Team 1" />
+
+        <RadioButton
+            android:id="@+id/radio_team2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onTeamRadioButtonClicked"
+            android:paddingRight="20dp"
+            android:text="Team 2" />
+
+        <RadioButton
+            android:id="@+id/radio_team3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onTeamRadioButtonClicked"
+            android:text="Team 3" />
+
+        <RadioButton
+            android:id="@+id/radio_allTeams"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onTeamRadioButtonClicked"
+            android:text="All Teams" />
+    </RadioGroup>
 </androidx.constraintlayout.widget.ConstraintLayout>

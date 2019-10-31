@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
+//import androidx.room.Room;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,16 +18,20 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.amazonaws.amplify.generated.graphql.CreateTaskMutation;
+import com.amazonaws.amplify.generated.graphql.CreateTeamMutation;
+import com.amazonaws.amplify.generated.graphql.GetTeamQuery;
 import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
+import com.amazonaws.amplify.generated.graphql.ListTeamsQuery;
 import com.amazonaws.amplify.generated.graphql.OnCreateTaskSubscription;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
 import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
 import com.thequangnguyen.taskmaster.R;
-import com.thequangnguyen.taskmaster.models.AppDatabase;
+//import com.thequangnguyen.taskmaster.models.AppDatabase;
 import com.thequangnguyen.taskmaster.models.Task;
 import com.thequangnguyen.taskmaster.models.TaskAdapter;
 
@@ -41,8 +45,10 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.Response;
 import type.CreateTaskInput;
+import type.CreateTeamInput;
+import type.ModelTaskFilterInput;
+import type.ModelTeamFilterInput;
 
 import com.google.gson.Gson;
 
@@ -52,10 +58,12 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
     private static final String TAG = "MainActivity";
     private List<Task> tasks;
-    public AppDatabase db;
+//    public AppDatabase db;
     RecyclerView recyclerView;
     AWSAppSyncClient awsAppSyncClient;
     TaskAdapter taskAdapter;
+    SharedPreferences prefs;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     @Override
     protected void onResume() {
         super.onResume();
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String username = prefs.getString("username", "My");
         TextView myTaskTitle = findViewById(R.id.text_my_tasks);
         if (username.equals("My") || username.equals("")) {
@@ -120,8 +128,12 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
             myTaskTitle.setText("" + username + "'s Tasks");
         }
 
-        // run graphql query for all tasks
-        queryAllTasks();
+        if (prefs.getString("teamId", "0").equals("0")) {
+            // run graphql query for all tasks
+            queryAllTasks();
+        } else {
+            queryForAllTasksOfSelectedTeam();
+        }
 
         // subscribe to future updates
         OnCreateTaskSubscription subscription = OnCreateTaskSubscription.builder().build();
@@ -129,8 +141,8 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
             @Override
             public void onResponse(@Nonnull com.apollographql.apollo.api.Response<OnCreateTaskSubscription.Data> response) {
                 // AWS call this method when a new Task is created
-                Task newTask = new Task(response.data().onCreateTask().title(), response.data().onCreateTask().body(), response.data().onCreateTask().state());
-                taskAdapter.addTask(newTask);
+//                Task newTask = new Task(response.data().onCreateTask().title(), response.data().onCreateTask().body(), response.data().onCreateTask().state());
+//                taskAdapter.addTask(newTask);
 
             }
 
@@ -180,58 +192,60 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     @Override
     public void redirectToTaskDetailPage(Task task) {
         Intent taskDetailIntent = new Intent(this, TaskDetail.class);
-        taskDetailIntent.putExtra("taskId", "" + task.getId());
+        taskDetailIntent.putExtra("title", "" + task.getTitle());
+        taskDetailIntent.putExtra("description", "" + task.getBody());
+        taskDetailIntent.putExtra("state", "" + task.getState());
         startActivity(taskDetailIntent);
     }
 
-    class GetTasksFromBackendServer implements Callback {
-
-        private static final String TAG = "nguyen.Callback";
-        MainActivity mainActivityInstance;
-
-        public GetTasksFromBackendServer (MainActivity mainActivityInstance) {
-            this.mainActivityInstance = mainActivityInstance;
-        }
-
-        @Override
-        public void onFailure(@NotNull Call call, @NotNull IOException e) {
-            Log.e(TAG, "something went wrong with connecting to backend server");
-            Log.e(TAG, e.getMessage());
-        }
-
-        @Override
-        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-            String allTasks = response.body().string();
-            Log.i(TAG, allTasks);
-            Gson gson = new Gson();
-            Task[] listOfTasksFromServer = gson.fromJson(allTasks, Task[].class);
-
-            db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "taskmaster")
-                    .allowMainThreadQueries().build();
-
-            Handler handlerForMainThread = new Handler(Looper.getMainLooper()) {
-                @Override
-                public void handleMessage(Message inputMessage) {
-                    Task[] listOfTasks = (Task[])inputMessage.obj;
-                    for (Task task: listOfTasks) {
-                        if (db.taskDao().getTasksByTitleAndBody(task.getTitle(), task.getBody()) == null) {
-                            db.taskDao().addTask(task);
-                        }
-                    }
-                    mainActivityInstance.tasks = db.taskDao().getAll();
-                    recyclerView = findViewById(R.id.recycler_tasks);
-                    recyclerView.setLayoutManager(new LinearLayoutManager(mainActivityInstance));
-                    recyclerView.setAdapter(new TaskAdapter(mainActivityInstance.tasks, mainActivityInstance));
-                }
-            };
-            Message completeMessage = handlerForMainThread.obtainMessage(0, listOfTasksFromServer);
-            completeMessage.sendToTarget();
-        }
-    }
+//    class GetTasksFromBackendServer implements Callback {
+//
+//        private static final String TAG = "nguyen.Callback";
+//        MainActivity mainActivityInstance;
+//
+//        public GetTasksFromBackendServer (MainActivity mainActivityInstance) {
+//            this.mainActivityInstance = mainActivityInstance;
+//        }
+//
+//        @Override
+//        public void onFailure(@NotNull Call call, @NotNull IOException e) {
+//            Log.e(TAG, "something went wrong with connecting to backend server");
+//            Log.e(TAG, e.getMessage());
+//        }
+//
+//        @Override
+//        public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+//            String allTasks = response.body().string();
+//            Log.i(TAG, allTasks);
+//            Gson gson = new Gson();
+//            Task[] listOfTasksFromServer = gson.fromJson(allTasks, Task[].class);
+//
+//            db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "taskmaster")
+//                    .allowMainThreadQueries().build();
+//
+//            Handler handlerForMainThread = new Handler(Looper.getMainLooper()) {
+//                @Override
+//                public void handleMessage(Message inputMessage) {
+//                    Task[] listOfTasks = (Task[])inputMessage.obj;
+//                    for (Task task: listOfTasks) {
+//                        if (db.taskDao().getTasksByTitleAndBody(task.getTitle(), task.getBody()) == null) {
+//                            db.taskDao().addTask(task);
+//                        }
+//                    }
+//                    mainActivityInstance.tasks = db.taskDao().getAll();
+//                    recyclerView = findViewById(R.id.recycler_tasks);
+//                    recyclerView.setLayoutManager(new LinearLayoutManager(mainActivityInstance));
+//                    recyclerView.setAdapter(new TaskAdapter(mainActivityInstance.tasks, mainActivityInstance));
+//                }
+//            };
+//            Message completeMessage = handlerForMainThread.obtainMessage(0, listOfTasksFromServer);
+//            completeMessage.sendToTarget();
+//        }
+//    }
 
     ////////////////////////// AWS GraphQL methods ////////////////////////////
 
-    // Query dynamo db
+    // Query dynamo db for all tasks
     public void queryAllTasks() {
         awsAppSyncClient.query(ListTasksQuery.builder().build())
                 .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK)
@@ -256,6 +270,61 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
             };
 
             handlerForMainThread.obtainMessage().sendToTarget();
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    };
+
+    // Query dynamo db for tasks that belongs to a certain team id
+    public void queryForAllTasksOfSelectedTeam() {
+        GetTeamQuery getTasksOfSelectedTeamQuery = GetTeamQuery.builder().id(prefs.getString("teamId", "759fa82c-36e1-4d84-a5f3-690f6b421ed3")).build();
+        awsAppSyncClient.query(getTasksOfSelectedTeamQuery)
+                .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK)
+                .enqueue(getSelectedTeamCallback);
+    }
+
+    public GraphQLCall.Callback<GetTeamQuery.Data> getSelectedTeamCallback = new GraphQLCall.Callback<GetTeamQuery.Data>() {
+        @Override
+        public void onResponse(@Nonnull final Response<GetTeamQuery.Data> response) {
+
+            Handler handlerForMainThread = new Handler(Looper.getMainLooper()) {
+                @Override
+                public void handleMessage(Message inputMessage) {
+                    List<GetTeamQuery.Item> tasksOfSelectedTeam = response.data().getTeam().tasks().items();
+                    tasks.clear();
+                    for(GetTeamQuery.Item task: tasksOfSelectedTeam) {
+                        tasks.add(new Task(task));
+                    }
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }
+            };
+            handlerForMainThread.obtainMessage().sendToTarget();
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    };
+
+    // add new team mutation
+    public void runAddTeamMutation() {
+        CreateTeamInput createTeamInput = CreateTeamInput.builder()
+                .name("Asian Sensation")
+                .build();
+
+
+        awsAppSyncClient.mutate(CreateTeamMutation.builder().input(createTeamInput).build())
+                .enqueue(addTeamCallBack);
+    }
+
+    public GraphQLCall.Callback<CreateTeamMutation.Data> addTeamCallBack = new GraphQLCall.Callback<CreateTeamMutation.Data>() {
+        @Override
+        public void onResponse(@Nonnull Response<CreateTeamMutation.Data> response) {
+            Log.i(TAG, "successfully added a team");
         }
 
         @Override

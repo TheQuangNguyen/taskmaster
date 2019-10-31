@@ -3,24 +3,33 @@ package com.thequangnguyen.taskmaster.models;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import com.amazonaws.amplify.generated.graphql.GetTeamQuery;
 import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
 
-@Entity
+//@Entity
 public class Task {
-    @PrimaryKey(autoGenerate = true)
+//    @PrimaryKey(autoGenerate = true)
 //    private long localId;
-    private long id;
+//    private long id;
     private String title;
     private String body;
     private String state;
+    private Team team;
 
-    public Task(String title, String body, String state) {
+    public Task(String title, String body, String state, Team team) {
         this.title = title;
         this.body = body;
         this.state = state;
+        this.team = team;
     }
 
     public Task(ListTasksQuery.Item task) {
+        this.title = task.title();
+        this.body = task.body();
+        this.state = task.state();
+    }
+
+    public Task(GetTeamQuery.Item task) {
         this.title = task.title();
         this.body = task.body();
         this.state = task.state();
@@ -52,15 +61,23 @@ public class Task {
         this.state = state;
     }
 
-    public long getId() {
-        return id;
+//    public long getId() {
+//        return id;
+//    }
+//
+//    public void setId(long id) {
+//        this.id = id;
+//    }
+
+    public Team getTeam() {
+        return team;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setTeam(Team team) {
+        this.team = team;
     }
 
-//    public long getLocalId() {
+    //    public long getLocalId() {
 ////        return localId;
 ////    }
 ////

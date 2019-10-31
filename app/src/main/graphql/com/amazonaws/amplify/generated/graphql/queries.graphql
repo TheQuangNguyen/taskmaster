@@ -5,6 +5,13 @@ query GetTask($id: ID!) {
     title
     body
     state
+    team {
+      id
+      name
+      tasks {
+        nextToken
+      }
+    }
   }
 }
 query ListTasks(
@@ -18,6 +25,41 @@ query ListTasks(
       title
       body
       state
+      team {
+        id
+        name
+      }
+    }
+    nextToken
+  }
+}
+query GetTeam($id: ID!) {
+  getTeam(id: $id) {
+    id
+    name
+    tasks {
+      items {
+        id
+        title
+        body
+        state
+      }
+      nextToken
+    }
+  }
+}
+query ListTeams(
+  $filter: ModelTeamFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listTeams(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      name
+      tasks {
+        nextToken
+      }
     }
     nextToken
   }
