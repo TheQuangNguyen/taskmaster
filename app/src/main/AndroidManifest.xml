@@ -20,7 +20,7 @@
         <service android:name="org.eclipse.paho.android.service.MqttService" />
         <activity android:name=".activities.Settings"></activity>
         <activity android:name=".activities.TaskDetail" />
-        <activity android:name=".activities.AllTasks" />
+        <activity android:name=".activities.AddTeam" />
         <activity android:name=".activities.AddTask" />
         <activity android:name=".activities.MainActivity">
             <intent-filter>

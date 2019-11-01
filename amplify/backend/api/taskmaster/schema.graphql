@@ -2,8 +2,15 @@ type Task @model {
   id: ID!
   title: String!
   body: String
-  state: String!
+  state: TaskState!
   team: Team @connection(name:"TeamTasks")
+}
+
+enum TaskState {
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETE
 }
 
 type Team @model {

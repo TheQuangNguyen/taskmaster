@@ -11,12 +11,18 @@ public class Task {
 //    @PrimaryKey(autoGenerate = true)
 //    private long localId;
 //    private long id;
+
+//    public enum TaskState
+//{
+//    NEW,ASSIGNED,IN_PROGRESS,COMPLETE
+//}
+
     private String title;
     private String body;
-    private String state;
+    private type.TaskState state;
     private Team team;
 
-    public Task(String title, String body, String state, Team team) {
+    public Task(String title, String body, type.TaskState state, Team team) {
         this.title = title;
         this.body = body;
         this.state = state;
@@ -53,11 +59,11 @@ public class Task {
         this.body = body;
     }
 
-    public String getState() {
+    public type.TaskState getState() {
         return state;
     }
 
-    public void setState(String state) {
+    public void setState(type.TaskState state) {
         this.state = state;
     }
 

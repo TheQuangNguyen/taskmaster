@@ -10,8 +10,11 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.RadioButton;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,7 +47,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import type.CreateTaskInput;
 
-public class AddTask extends AppCompatActivity {
+public class AddTask extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private EditText inputTaskTitle;
     private EditText inputTaskDescription;
@@ -74,7 +77,7 @@ public class AddTask extends AppCompatActivity {
         Toast toast = Toast.makeText(this, R.string.submitted_message, Toast.LENGTH_SHORT);
         toast.show();
 
-        runAddTaskMutation(inputTaskTitle.getText().toString(), inputTaskDescription.getText().toString(), "NEW", selectedTeam);
+        runAddTaskMutation(inputTaskTitle.getText().toString(), inputTaskDescription.getText().toString(), type.TaskState.NEW, selectedTeam);
 
 //        finish();
 //        OkHttpClient client = new OkHttpClient();
@@ -95,16 +98,6 @@ public class AddTask extends AppCompatActivity {
 //        Intent addTaskToMainPageIntent = new Intent(this, MainActivity.class);
 //        startActivity(addTaskToMainPageIntent);
 //        finish();
-    }
-
-    public void onTeamRadioButtonClicked(View view) {
-        RadioButton teamRadioButton = findViewById(view.getId());
-        String teamName = teamRadioButton.getText().toString();
-        for(ListTeamsQuery.Item team: teams) {
-            if (team.name().equals(teamName)) {
-                selectedTeam = team;
-            }
-        }
     }
 
     class PostTasksToBackendServer implements Callback {
@@ -138,7 +131,7 @@ public class AddTask extends AppCompatActivity {
     //////////////////////////// AWS GraphQL methods ///////////////////////////////
 
     // insert a new task
-    public void runAddTaskMutation(String title, String description, String state, ListTeamsQuery.Item selectedTeam) {
+    public void runAddTaskMutation(String title, String description, type.TaskState state, ListTeamsQuery.Item selectedTeam) {
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
                 .title(title)
                 .body(description)
@@ -148,6 +141,19 @@ public class AddTask extends AppCompatActivity {
         awsAppSyncClient.mutate(CreateTaskMutation.builder().input(createTaskInput).build())
                 .enqueue(addTaskCallBack);
     }
+
+    // callback for inserting a task
+    public GraphQLCall.Callback<CreateTaskMutation.Data> addTaskCallBack = new GraphQLCall.Callback<CreateTaskMutation.Data>() {
+        @Override
+        public void onResponse(@Nonnull com.apollographql.apollo.api.Response<CreateTaskMutation.Data> response) {
+            finish();
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    };
 
     // query for all teams in dynamoDB
     public void queryAllTeams() {
@@ -163,18 +169,20 @@ public class AddTask extends AppCompatActivity {
             Handler handlerForMainThread = new Handler(Looper.getMainLooper()) {
                 @Override
                 public void handleMessage(Message inputMessage) {
-                    List<ListTeamsQuery.Item> DBTeams = response.data().listTeams().items();
                     teams.clear();
-                    for (ListTeamsQuery.Item team: DBTeams) {
-                        teams.add(team);
+                    teams.addAll(response.data().listTeams().items());
+
+                    LinkedList<String> teamNames = new LinkedList<>();
+                    for(ListTeamsQuery.Item team: teams) {
+                        teamNames.add(team.name());
                     }
 
-                    TextView team1 = findViewById(R.id.radio_team1);
-                    TextView team2 = findViewById(R.id.radio_team2);
-                    TextView team3 = findViewById(R.id.radio_team3);
-                    team1.setText(teams.get(0).name());
-                    team2.setText(teams.get(1).name());
-                    team3.setText(teams.get(2).name());
+                    Spinner spinner =  findViewById(R.id.spinner_select_team);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(AddTask.this, android.R.layout.simple_spinner_item, teamNames);
+                    // Specify the layout to use when the list of choices appears
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinner.setAdapter(adapter);
+                    spinner.setOnItemSelectedListener(AddTask.this);
                 }
             };
 
@@ -183,20 +191,17 @@ public class AddTask extends AppCompatActivity {
 
         @Override
         public void onFailure(@Nonnull ApolloException e) {
-
+            Log.e("error", "error getting teams from cloud database");
         }
     };
 
-    // callback for inserting a task
-    public GraphQLCall.Callback<CreateTaskMutation.Data> addTaskCallBack = new GraphQLCall.Callback<CreateTaskMutation.Data>() {
-        @Override
-        public void onResponse(@Nonnull com.apollographql.apollo.api.Response<CreateTaskMutation.Data> response) {
-            finish();
-        }
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            selectedTeam = teams.get(position);
+    }
 
-        @Override
-        public void onFailure(@Nonnull ApolloException e) {
-            Log.e(TAG, e.getMessage());
-        }
-    };
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
 }

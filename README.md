@@ -72,3 +72,11 @@ This android app will track all the tasks that a user need to do and allow user 
 * Create a second entity for a team, which has a name and a list of tasks. Update my tasks to be owned by a team.
 * Modify my Add Task form to include Radio Buttons for which team that task belongs to.
 * In addition to a username, added Radio Buttons to allow the user to choose their team on the Settings page. Use that Team to display only that team’s tasks on the homepage.
+
+### Friday 11/1/2019
+
+#### WHat I Worked On
+
+* Create a page for users to add new teams.
+* Replace radio buttons with spinners for displaying and selecting available teams.
+* Refactor code to have state field be enum instead of String.
