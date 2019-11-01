@@ -12,17 +12,17 @@ public class Task {
 //    private long localId;
 //    private long id;
 
-    public enum State
-{
-    NEW,ASSIGNED,IN_PROGRESS,COMPLETE
-}
+//    public enum TaskState
+//{
+//    NEW,ASSIGNED,IN_PROGRESS,COMPLETE
+//}
 
     private String title;
     private String body;
-    private State state;
+    private type.TaskState state;
     private Team team;
 
-    public Task(String title, String body, State state, Team team) {
+    public Task(String title, String body, type.TaskState state, Team team) {
         this.title = title;
         this.body = body;
         this.state = state;
@@ -59,11 +59,11 @@ public class Task {
         this.body = body;
     }
 
-    public State getState() {
+    public type.TaskState getState() {
         return state;
     }
 
-    public void setState(State state) {
+    public void setState(type.TaskState state) {
         this.state = state;
     }
 

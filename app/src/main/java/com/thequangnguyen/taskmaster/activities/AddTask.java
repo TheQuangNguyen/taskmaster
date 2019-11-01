@@ -77,7 +77,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         Toast toast = Toast.makeText(this, R.string.submitted_message, Toast.LENGTH_SHORT);
         toast.show();
 
-        runAddTaskMutation(inputTaskTitle.getText().toString(), inputTaskDescription.getText().toString(), Task.State.NEW, selectedTeam);
+        runAddTaskMutation(inputTaskTitle.getText().toString(), inputTaskDescription.getText().toString(), type.TaskState.NEW, selectedTeam);
 
 //        finish();
 //        OkHttpClient client = new OkHttpClient();
@@ -131,7 +131,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     //////////////////////////// AWS GraphQL methods ///////////////////////////////
 
     // insert a new task
-    public void runAddTaskMutation(String title, String description, Task.State state, ListTeamsQuery.Item selectedTeam) {
+    public void runAddTaskMutation(String title, String description, type.TaskState state, ListTeamsQuery.Item selectedTeam) {
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
                 .title(title)
                 .body(description)

@@ -41,6 +41,7 @@ public class Settings extends AppCompatActivity {
         EditText usernameEditText = findViewById(R.id.username_input);
         String username = usernameEditText.getText().toString();
 
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
         editor.putString("username", username);
         editor.apply();
