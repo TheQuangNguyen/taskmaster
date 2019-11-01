@@ -14,10 +14,11 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.amazonaws.amplify.generated.graphql.CreateTaskMutation;
 import com.amazonaws.amplify.generated.graphql.CreateTeamMutation;
 import com.amazonaws.amplify.generated.graphql.GetTeamQuery;
 import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
@@ -35,26 +36,14 @@ import com.thequangnguyen.taskmaster.R;
 import com.thequangnguyen.taskmaster.models.Task;
 import com.thequangnguyen.taskmaster.models.TaskAdapter;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import type.CreateTaskInput;
 import type.CreateTeamInput;
-import type.ModelTaskFilterInput;
-import type.ModelTeamFilterInput;
-
-import com.google.gson.Gson;
 
 import javax.annotation.Nonnull;
 
-public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTaskInteractionListener {
+public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTaskInteractionListener, AdapterView.OnItemSelectedListener {
 
     private static final String TAG = "MainActivity";
     private List<Task> tasks;
@@ -63,7 +52,8 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     AWSAppSyncClient awsAppSyncClient;
     TaskAdapter taskAdapter;
     SharedPreferences prefs;
-
+    List<ListTeamsQuery.Item> teams;
+    ListTeamsQuery.Item selectedTeam;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
         setContentView(R.layout.activity_main);
 
         this.tasks = new LinkedList<>();
+        this.teams = new LinkedList<>();
 
         // connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
@@ -128,12 +119,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
             myTaskTitle.setText("" + username + "'s Tasks");
         }
 
-        if (prefs.getString("teamId", "0").equals("0")) {
-            // run graphql query for all tasks
-            queryAllTasks();
-        } else {
-            queryForAllTasksOfSelectedTeam();
-        }
+        queryAllTeams();
 
         // subscribe to future updates
         OnCreateTaskSubscription subscription = OnCreateTaskSubscription.builder().build();
@@ -171,9 +157,9 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
         startActivity(addTaskIntent);
     }
 
-    public void redirectToAllTaskActivity(View view) {
-        Intent allTasksIntent = new Intent(this, AllTasks.class);
-        startActivity(allTasksIntent);
+    public void redirectToAddTeamActivity(View view) {
+        Intent addTeamIntent = new Intent(this, AddTeam.class);
+        startActivity(addTeamIntent);
     }
 
 //    public void redirectToTaskDetailActivity(View view) {
@@ -280,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
     // Query dynamo db for tasks that belongs to a certain team id
     public void queryForAllTasksOfSelectedTeam() {
-        GetTeamQuery getTasksOfSelectedTeamQuery = GetTeamQuery.builder().id(prefs.getString("teamId", "759fa82c-36e1-4d84-a5f3-690f6b421ed3")).build();
+        GetTeamQuery getTasksOfSelectedTeamQuery = GetTeamQuery.builder().id(selectedTeam.id()).build();
         awsAppSyncClient.query(getTasksOfSelectedTeamQuery)
                 .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK)
                 .enqueue(getSelectedTeamCallback);
@@ -310,26 +296,59 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
         }
     };
 
-    // add new team mutation
-    public void runAddTeamMutation() {
-        CreateTeamInput createTeamInput = CreateTeamInput.builder()
-                .name("Asian Sensation")
-                .build();
-
-
-        awsAppSyncClient.mutate(CreateTeamMutation.builder().input(createTeamInput).build())
-                .enqueue(addTeamCallBack);
+    // query for all teams in dynamoDB
+    public void queryAllTeams() {
+        awsAppSyncClient.query(ListTeamsQuery.builder().build())
+                .responseFetcher(AppSyncResponseFetchers.CACHE_AND_NETWORK)
+                .enqueue(getAllTeamsCallback);
     }
 
-    public GraphQLCall.Callback<CreateTeamMutation.Data> addTeamCallBack = new GraphQLCall.Callback<CreateTeamMutation.Data>() {
+    public GraphQLCall.Callback<ListTeamsQuery.Data> getAllTeamsCallback = new GraphQLCall.Callback<ListTeamsQuery.Data>() {
         @Override
-        public void onResponse(@Nonnull Response<CreateTeamMutation.Data> response) {
-            Log.i(TAG, "successfully added a team");
+        public void onResponse(@Nonnull final com.apollographql.apollo.api.Response<ListTeamsQuery.Data> response) {
+
+            Handler handlerForMainThread = new Handler(Looper.getMainLooper()) {
+                @Override
+                public void handleMessage(Message inputMessage) {
+                    teams.clear();
+                    teams.addAll(response.data().listTeams().items());
+
+                    LinkedList<String> teamNames = new LinkedList<>();
+                    teamNames.add("All Teams");
+                    for(ListTeamsQuery.Item team: teams) {
+                        teamNames.add(team.name());
+                    }
+
+                    Spinner spinner =  findViewById(R.id.spinner_all_teams);
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_item, teamNames);
+                    // Specify the layout to use when the list of choices appears
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    spinner.setAdapter(adapter);
+                    spinner.setOnItemSelectedListener(MainActivity.this);
+                }
+            };
+
+            handlerForMainThread.obtainMessage().sendToTarget();
         }
 
         @Override
         public void onFailure(@Nonnull ApolloException e) {
-            Log.e(TAG, e.getMessage());
+            Log.e("error", "error getting teams from cloud database");
         }
     };
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        if (position == 0) {
+            queryAllTasks();
+        } else {
+            selectedTeam = teams.get(position-1);
+            queryForAllTasksOfSelectedTeam();
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
 }
