@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
                 new Callback<UserStateDetails>() {
             @Override
             public void onResult(UserStateDetails result) {
-
+                Log.i(COGNITO, "successfully show signed in page");
             }
 
             @Override
