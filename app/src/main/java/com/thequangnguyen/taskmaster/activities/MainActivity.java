@@ -24,6 +24,10 @@ import com.amazonaws.amplify.generated.graphql.GetTeamQuery;
 import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
 import com.amazonaws.amplify.generated.graphql.ListTeamsQuery;
 import com.amazonaws.amplify.generated.graphql.OnCreateTaskSubscription;
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.SignInUIOptions;
+import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall;
@@ -62,6 +66,22 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
         this.tasks = new LinkedList<>();
         this.teams = new LinkedList<>();
+
+        // initialize aws mobile client and check if you are logged in or not
+        AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
+            @Override
+            public void onResult(UserStateDetails result) {
+                // if the user is signed out, show them the sign in page
+                if (result.getUserState().toString().equals("SIGNED_OUT")) {
+                    signInUser();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
 
         // connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
@@ -110,14 +130,18 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     @Override
     protected void onResume() {
         super.onResume();
-        prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        String username = prefs.getString("username", "My");
+//        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+//        String username = prefs.getString("username", "My");
+//        TextView myTaskTitle = findViewById(R.id.text_my_tasks);
+//        if (username.equals("My") || username.equals("")) {
+//            myTaskTitle.setText("My Tasks");
+//        } else {
+//            myTaskTitle.setText("" + username + "'s Tasks");
+//        }
+
+        String username = AWSMobileClient.getInstance().getUsername();
         TextView myTaskTitle = findViewById(R.id.text_my_tasks);
-        if (username.equals("My") || username.equals("")) {
-            myTaskTitle.setText("My Tasks");
-        } else {
-            myTaskTitle.setText("" + username + "'s Tasks");
-        }
+        myTaskTitle.setText("" + username + "'s Tasks");
 
         queryAllTeams();
 
@@ -162,14 +186,6 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
         startActivity(addTeamIntent);
     }
 
-//    public void redirectToTaskDetailActivity(View view) {
-//        Button taskButton = findViewById(view.getId());
-//        String taskTitle = taskButton.getText().subSequence(3, taskButton.getText().length()).toString();
-//        Intent taskDetailIntent = new Intent(this, TaskDetail.class);
-//        taskDetailIntent.putExtra("taskTitle", taskTitle);
-//        startActivity(taskDetailIntent);
-//    }
-
     public void redirectToSettingActivity(View view) {
         Intent settingIntent = new Intent(this, Settings.class);
         startActivity(settingIntent);
@@ -182,6 +198,27 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
         taskDetailIntent.putExtra("description", "" + task.getBody());
         taskDetailIntent.putExtra("state", "" + task.getState());
         startActivity(taskDetailIntent);
+    }
+
+    public void signoutCurrentUser(View view) {
+        AWSMobileClient.getInstance().signOut();
+    }
+
+    public void signInUser() {
+        AWSMobileClient.getInstance().showSignIn(MainActivity.this,
+                // customize the built in sign in page
+                SignInUIOptions.builder().build(),
+                new Callback<UserStateDetails>() {
+            @Override
+            public void onResult(UserStateDetails result) {
+
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        });
     }
 
 //    class GetTasksFromBackendServer implements Callback {
