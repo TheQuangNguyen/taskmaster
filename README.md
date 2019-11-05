@@ -80,3 +80,13 @@ This android app will track all the tasks that a user need to do and allow user 
 * Create a page for users to add new teams.
 * Replace radio buttons with spinners for displaying and selecting available teams.
 * Refactor code to have state field be enum instead of String.
+
+### Tuesday 11/5/2019
+
+#### What I Worked On
+
+* Add Cognito to my Amplify setup.
+* Add in user login and sign up flows to my application, using Cognito’s pre-built UI as appropriate.
+* Display the logged in user’s username on the main page
+* Allow users to log out of your application.
+
