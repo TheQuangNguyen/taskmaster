@@ -16,5 +16,12 @@
 				}
 			}
 		}
+	},
+	"auth": {
+		"taskmaster7e51e1c5": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": []
+		}
 	}
 }

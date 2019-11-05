@@ -50,6 +50,7 @@ import javax.annotation.Nonnull;
 public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTaskInteractionListener, AdapterView.OnItemSelectedListener {
 
     private static final String TAG = "MainActivity";
+    private static final String COGNITO = "COGNITO";
     private List<Task> tasks;
 //    public AppDatabase db;
     RecyclerView recyclerView;
@@ -62,10 +63,6 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        this.tasks = new LinkedList<>();
-        this.teams = new LinkedList<>();
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -79,9 +76,14 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
             @Override
             public void onError(Exception e) {
-
+                Log.e(COGNITO, e.getMessage());
             }
         });
+
+        setContentView(R.layout.activity_main);
+
+        this.tasks = new LinkedList<>();
+        this.teams = new LinkedList<>();
 
         // connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
@@ -202,12 +204,13 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
     public void signoutCurrentUser(View view) {
         AWSMobileClient.getInstance().signOut();
+        signInUser();
     }
 
     public void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
                 // customize the built in sign in page
-                SignInUIOptions.builder().build(),
+                SignInUIOptions.builder().backgroundColor(16763080).logo(R.drawable.taskmaster_background).build(),
                 new Callback<UserStateDetails>() {
             @Override
             public void onResult(UserStateDetails result) {
@@ -216,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 
             @Override
             public void onError(Exception e) {
-
+                Log.e(COGNITO, e.getMessage());
             }
         });
     }
