@@ -5,6 +5,9 @@ subscription OnCreateTask {
     title
     body
     state
+    file {
+      ...S3Object
+    }
     team {
       id
       name
@@ -20,6 +23,9 @@ subscription OnUpdateTask {
     title
     body
     state
+    file {
+      ...S3Object
+    }
     team {
       id
       name
@@ -35,6 +41,9 @@ subscription OnDeleteTask {
     title
     body
     state
+    file {
+      ...S3Object
+    }
     team {
       id
       name
@@ -87,5 +96,20 @@ subscription OnDeleteTeam {
       }
       nextToken
     }
+  }
+}
+subscription OnCreateS3Object {
+  onCreateS3Object {
+    ...S3Object
+  }
+}
+subscription OnUpdateS3Object {
+  onUpdateS3Object {
+    ...S3Object
+  }
+}
+subscription OnDeleteS3Object {
+  onDeleteS3Object {
+    ...S3Object
   }
 }

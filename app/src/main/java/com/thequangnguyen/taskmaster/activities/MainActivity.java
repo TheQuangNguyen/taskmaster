@@ -289,6 +289,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
                     List<ListTasksQuery.Item> DBTasks = response.data().listTasks().items();
                     tasks.clear();
                     for (ListTasksQuery.Item task: DBTasks) {
+
                         tasks.add(new Task(task));
                     }
                     recyclerView.getAdapter().notifyDataSetChanged();

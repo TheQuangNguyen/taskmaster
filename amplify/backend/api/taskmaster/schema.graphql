@@ -3,6 +3,7 @@ type Task @model {
   title: String!
   body: String
   state: TaskState!
+  file: S3Object
   team: Team @connection(name:"TeamTasks")
 }
 
@@ -17,4 +18,20 @@ type Team @model {
   id: ID!
   name: String!
   tasks: [Task] @connection(name:"TeamTasks")
+}
+
+input S3ObjectInput {
+  bucket: String!
+  key: String!
+  region: String!
+  localUri: String
+  mimeType: String
+}
+
+type S3Object @model {
+  bucket: String!
+  key: String!
+  region: String!
+  localUri: String
+  mimeType: String
 }
