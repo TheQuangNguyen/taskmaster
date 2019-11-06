@@ -32,4 +32,6 @@ type S3Object @model {
   bucket: String!
   key: String!
   region: String!
+  localUri: String
+  mimeType: String
 }

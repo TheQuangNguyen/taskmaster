@@ -3,4 +3,6 @@ fragment S3Object on S3Object {
   bucket
   key
   region
+  localUri
+  mimeType
 }

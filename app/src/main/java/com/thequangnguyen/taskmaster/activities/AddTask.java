@@ -29,7 +29,10 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.apollographql.apollo.GraphQLCall;
@@ -43,6 +46,7 @@ import com.thequangnguyen.taskmaster.models.Team;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -73,6 +77,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     private static final String TAG = "nguyen.AddTaskActivity";
     private static final int READ_REQUEST_CODE = 42;
     private String filePath;
+    TransferUtility transferUtility;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +88,15 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         // connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
                 .context(getApplicationContext())
-                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .awsConfiguration(new AWSConfiguration(getApplicationContext())).
                 .build();
+
+        transferUtility =
+                TransferUtility.builder()
+                        .context(getApplicationContext())
+                        .awsConfiguration(AWSMobileClient.getInstance().getConfiguration())
+                        .s3Client(new AmazonS3Client(AWSMobileClient.getInstance()))
+                        .build();
 
 
         getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
@@ -155,6 +167,15 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
 
     // insert a new task
     public void runAddTaskMutation(String title, String description, type.TaskState state, ListTeamsQuery.Item selectedTeam) {
+        CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
+                .bucket("taskmasterfiles")
+                .key("public/" + UUID.randomUUID().toString())
+                .region("us-west-2")
+                .localUri(this.filePath)
+                .build();
+        CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
+        awsAppSyncClient.mutate(s3Object);
+
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
                 .title(title)
                 .body(description)
@@ -232,13 +253,14 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
 
     // fires an intent to spin up the "file chooser" UI and select a file
     public void pickFile(View view) {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
         // Filter to only show results that can be "opened", such as a
         // file (as opposed to a list of contacts or timezones)
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
+//        intent.addCategory(Intent.CATEGORY_OPENABLE);
         // To search for all documents available via installed storage providers,
         // it would be "*/*".
-        intent.setType("*/*");
+//        intent.setType("image/*");
         startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
@@ -257,6 +279,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
             // provided to this method as a parameter.
             // Pull that URI using resultData.getData().
             Uri selectedFile = resultData.getData();
+            Log.i("filepath", selectedFile.toString());
             String[] filePathColumn = {MediaStore.Images.Media.DATA};
             Cursor cursor = getContentResolver().query(selectedFile,
                     filePathColumn, null, null, null);
@@ -264,31 +287,63 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
             int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
             // String filePath contains the path of selected file
             this.filePath = cursor.getString(columnIndex);
+            Log.i("filepath", "" + this.filePath);
             cursor.close();
+//            this.filePath = selectedFile.toString();
+            uploadFiles();
+
+            Toast toast = Toast.makeText(this, R.string.submitted_message, Toast.LENGTH_SHORT);
+            toast.show();
         }
     }
 
     //
     public void uploadFiles() {
         CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
-                .bucket("taskmasterfiles")
+                .bucket("taskmasterfiles-local")
                 .key("public/" + UUID.randomUUID().toString())
                 .region("us-west-2")
+                .localUri(this.filePath)
                 .build();
         CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
-        awsAppSyncClient.mutate(s3Object);
+        awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
+        TransferObserver uploadObserver = transferUtility.upload("testFile", new File(this.filePath));
+        uploadObserver.setTransferListener(new TransferListener() {
+
+            @Override
+            public void onStateChanged(int id, TransferState state) {
+                if (TransferState.COMPLETED == state) {
+                    Log.i("filepath", "completed");
+                }
+            }
+
+            @Override
+            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+                float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
+                int percentDone = (int)percentDonef;
+
+                Log.d(TAG, "ID:" + id + " bytesCurrent: " + bytesCurrent
+                        + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
+            }
+
+            @Override
+            public void onError(int id, Exception ex) {
+                Log.e("filepath", ex.getMessage());
+            }
+
+        });
     }
 
-//    public GraphQLCall.Callback<CreateS3ObjectMutation.Data> uploadFileCallBack = new GraphQLCall.Callback<CreateS3ObjectMutation.Data>() {
-//        @Override
-//        public void onResponse(@Nonnull com.apollographql.apollo.api.Response<CreateS3ObjectMutation.Data> response) {
-//
-//        }
-//
-//        @Override
-//        public void onFailure(@Nonnull ApolloException e) {
-//
-//        }
-//    }
+    public GraphQLCall.Callback<CreateS3ObjectMutation.Data> uploadFileCallBack = new GraphQLCall.Callback<CreateS3ObjectMutation.Data>() {
+        @Override
+        public void onResponse(@Nonnull com.apollographql.apollo.api.Response<CreateS3ObjectMutation.Data> response) {
+            Log.i("filepath", response.data().toString());
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e("filepath", e.getMessage());
+        }
+    };
 
 }
