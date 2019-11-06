@@ -18,3 +18,11 @@ type Team @model {
   name: String!
   tasks: [Task] @connection(name:"TeamTasks")
 }
+
+input S3ObjectInput @model{
+  bucket: String!
+  key: String!
+  region: String!
+  localUri: String
+  mimeType: String
+}
