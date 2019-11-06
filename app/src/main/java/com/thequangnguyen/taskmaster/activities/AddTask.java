@@ -5,11 +5,13 @@ import androidx.room.Room;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -20,12 +22,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.amazonaws.amplify.generated.graphql.CreateS3ObjectMutation;
 import com.amazonaws.amplify.generated.graphql.CreateTaskMutation;
 import com.amazonaws.amplify.generated.graphql.ListTeamsQuery;
+import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.api.Operation;
+import com.apollographql.apollo.cache.CacheHeaders;
 import com.apollographql.apollo.exception.ApolloException;
 import com.thequangnguyen.taskmaster.R;
 //import com.thequangnguyen.taskmaster.models.AppDatabase;
@@ -37,9 +46,12 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
+import fragment.S3Object;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
@@ -47,6 +59,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import type.CreateS3ObjectInput;
 import type.CreateTaskInput;
 
 public class AddTask extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
@@ -58,7 +71,8 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     List<ListTeamsQuery.Item> teams;
     ListTeamsQuery.Item selectedTeam;
     private static final String TAG = "nguyen.AddTaskActivity";
-    private static final int READ_REQUEST_CODE = 1;
+    private static final int READ_REQUEST_CODE = 42;
+    private String filePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +86,10 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
                 .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
 
+
+        getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
+
+
         this.teams = new LinkedList<>();
         queryAllTeams();
 //        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "taskmaster").allowMainThreadQueries().build();
@@ -80,6 +98,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     public void showSubmittedMessage(View view) {
         Toast toast = Toast.makeText(this, R.string.submitted_message, Toast.LENGTH_SHORT);
         toast.show();
+
 
         runAddTaskMutation(inputTaskTitle.getText().toString(), inputTaskDescription.getText().toString(), type.TaskState.NEW, selectedTeam);
 
@@ -209,6 +228,8 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
 
     }
 
+    ///////////////////////////////////// S3 Storage Code //////////////////////////////////////////
+
     // fires an intent to spin up the "file chooser" UI and select a file
     public void pickFile(View view) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -221,6 +242,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
+    // after the user selects a document in the picker, onActivityResult() gets called
     @Override
     public void onActivityResult(int requestCode, int resultCode,
                                  Intent resultData) {
@@ -229,17 +251,44 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         // READ_REQUEST_CODE. If the request code seen here doesn't match, it's the
         // response to some other intent, and the code below shouldn't run at all.
 
-        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK && resultData != null) {
             // The document selected by the user won't be returned in the intent.
             // Instead, a URI to that document will be contained in the return intent
             // provided to this method as a parameter.
             // Pull that URI using resultData.getData().
-            Uri uri = null;
-            if (resultData != null) {
-                uri = resultData.getData();
-                Log.i(TAG, "Uri: " + uri.toString());
-
-            }
+            Uri selectedFile = resultData.getData();
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContentResolver().query(selectedFile,
+                    filePathColumn, null, null, null);
+            cursor.moveToFirst();
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            // String filePath contains the path of selected file
+            this.filePath = cursor.getString(columnIndex);
+            cursor.close();
         }
     }
+
+    //
+    public void uploadFiles() {
+        CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
+                .bucket("taskmasterfiles")
+                .key("public/" + UUID.randomUUID().toString())
+                .region("us-west-2")
+                .build();
+        CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
+        awsAppSyncClient.mutate(s3Object);
+    }
+
+//    public GraphQLCall.Callback<CreateS3ObjectMutation.Data> uploadFileCallBack = new GraphQLCall.Callback<CreateS3ObjectMutation.Data>() {
+//        @Override
+//        public void onResponse(@Nonnull com.apollographql.apollo.api.Response<CreateS3ObjectMutation.Data> response) {
+//
+//        }
+//
+//        @Override
+//        public void onFailure(@Nonnull ApolloException e) {
+//
+//        }
+//    }
+
 }

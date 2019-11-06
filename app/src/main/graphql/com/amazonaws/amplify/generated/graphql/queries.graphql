@@ -5,6 +5,9 @@ query GetTask($id: ID!) {
     title
     body
     state
+    file {
+      ...S3Object
+    }
     team {
       id
       name
@@ -25,6 +28,9 @@ query ListTasks(
       title
       body
       state
+      file {
+        ...S3Object
+      }
       team {
         id
         name
@@ -60,6 +66,23 @@ query ListTeams(
       tasks {
         nextToken
       }
+    }
+    nextToken
+  }
+}
+query GetS3Object($id: ID!) {
+  getS3Object(id: $id) {
+    ...S3Object
+  }
+}
+query ListS3Objects(
+  $filter: ModelS3ObjectFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listS3Objects(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      ...S3Object
     }
     nextToken
   }

@@ -5,6 +5,11 @@ import androidx.room.PrimaryKey;
 
 import com.amazonaws.amplify.generated.graphql.GetTeamQuery;
 import com.amazonaws.amplify.generated.graphql.ListTasksQuery;
+import com.amazonaws.services.s3.model.S3Object;
+
+import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 
 //@Entity
 public class Task {
@@ -21,6 +26,7 @@ public class Task {
     private String body;
     private type.TaskState state;
     private Team team;
+    private S3Object file;
 
     public Task(String title, String body, type.TaskState state, Team team) {
         this.title = title;
@@ -81,6 +87,14 @@ public class Task {
 
     public void setTeam(Team team) {
         this.team = team;
+    }
+
+    public S3Object getFile() {
+        return file;
+    }
+
+    public void setFile(S3Object file) {
+        this.file = file;
     }
 
     //    public long getLocalId() {

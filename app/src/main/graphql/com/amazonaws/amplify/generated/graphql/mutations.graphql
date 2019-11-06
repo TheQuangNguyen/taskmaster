@@ -5,6 +5,9 @@ mutation CreateTask($input: CreateTaskInput!) {
     title
     body
     state
+    file {
+      ...S3Object
+    }
     team {
       id
       name
@@ -20,6 +23,9 @@ mutation UpdateTask($input: UpdateTaskInput!) {
     title
     body
     state
+    file {
+      ...S3Object
+    }
     team {
       id
       name
@@ -35,6 +41,9 @@ mutation DeleteTask($input: DeleteTaskInput!) {
     title
     body
     state
+    file {
+      ...S3Object
+    }
     team {
       id
       name
@@ -87,5 +96,20 @@ mutation DeleteTeam($input: DeleteTeamInput!) {
       }
       nextToken
     }
+  }
+}
+mutation CreateS3Object($input: CreateS3ObjectInput!) {
+  createS3Object(input: $input) {
+    ...S3Object
+  }
+}
+mutation UpdateS3Object($input: UpdateS3ObjectInput!) {
+  updateS3Object(input: $input) {
+    ...S3Object
+  }
+}
+mutation DeleteS3Object($input: DeleteS3ObjectInput!) {
+  deleteS3Object(input: $input) {
+    ...S3Object
   }
 }
