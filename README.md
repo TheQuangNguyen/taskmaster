@@ -38,6 +38,7 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
+
 <img src="screenshots/recycler-home-page.PNG" width="200">
 
 ### Friday 10/25/2019 
@@ -89,7 +90,6 @@ This android app will track all the tasks that a user need to do and allow user 
 * Add in user login and sign up flows to my application, using Cognito’s pre-built UI as appropriate.
 * Display the logged in user’s username on the main page
 * Allow users to log out of your application.
-
 
 ### Wednesday 11/6/2019
 
