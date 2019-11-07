@@ -5,7 +5,7 @@ query GetTask($id: ID!) {
     title
     body
     state
-    attachFileUri
+    fileKey
     team {
       id
       name
@@ -15,7 +15,7 @@ query GetTask($id: ID!) {
           title
           body
           state
-          attachFileUri
+          fileKey
           team {
             id
             name
@@ -37,7 +37,7 @@ query ListTasks(
       title
       body
       state
-      attachFileUri
+      fileKey
       team {
         id
         name
@@ -47,7 +47,7 @@ query ListTasks(
             title
             body
             state
-            attachFileUri
+            fileKey
           }
           nextToken
         }
@@ -66,7 +66,7 @@ query GetTeam($id: ID!) {
         title
         body
         state
-        attachFileUri
+        fileKey
         team {
           id
           name
@@ -94,7 +94,7 @@ query ListTeams(
           title
           body
           state
-          attachFileUri
+          fileKey
           team {
             id
             name

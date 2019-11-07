@@ -307,7 +307,7 @@
                         "deprecationReason": null
                     },
                     {
-                        "name": "attachFileUri",
+                        "name": "fileKey",
                         "description": null,
                         "args": [],
                         "type": {
@@ -524,7 +524,7 @@
                         "defaultValue": null
                     },
                     {
-                        "name": "attachFileUri",
+                        "name": "fileKey",
                         "description": null,
                         "type": {
                             "kind": "INPUT_OBJECT",
@@ -1547,7 +1547,7 @@
                         "defaultValue": null
                     },
                     {
-                        "name": "attachFileUri",
+                        "name": "fileKey",
                         "description": null,
                         "type": {
                             "kind": "SCALAR",
@@ -1622,7 +1622,7 @@
                         "defaultValue": null
                     },
                     {
-                        "name": "attachFileUri",
+                        "name": "fileKey",
                         "description": null,
                         "type": {
                             "kind": "SCALAR",

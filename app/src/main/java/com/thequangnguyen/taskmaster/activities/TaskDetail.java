@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -55,40 +56,43 @@ public class TaskDetail extends AppCompatActivity {
         String title = getIntent().getStringExtra("title");
         String description = getIntent().getStringExtra("description");
         String state = getIntent().getStringExtra("state");
-//        String fileUri = getIntent().getStringExtra("Uri");
+        final String fileKey = getIntent().getStringExtra("fileKey");
         TextView taskDetailTitle = findViewById(R.id.task_detail_title);
         TextView taskDetailDescription = findViewById(R.id.task_description);
         TextView taskDetailState = findViewById(R.id.task_state);
         final ImageView taskImage = findViewById(R.id.task_image);
 
-        TransferObserver observer = transferUtility.download("testFile", new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "test.jpg"));
+        if (fileKey != null) {
+            TransferObserver observer = transferUtility.download(fileKey, new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileKey));
 
-        observer.setTransferListener(new TransferListener() {
-            @Override
-            public void onStateChanged(int id, TransferState state) {
-                if (TransferState.COMPLETED == state) {
-                    Log.i("Quang.listener", "transfer state is " + state.toString());
-                    Handler mainThread = new Handler(Looper.getMainLooper()) {
-                        @Override
-                        public void handleMessage(Message inputMessage) {
-//                            Log.i("Quang.listener", )
-                            taskImage.setImageBitmap(BitmapFactory.decodeFile(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "test.jpg").getAbsolutePath()));
-                        }
-                    };
-                    mainThread.obtainMessage().sendToTarget();
+            observer.setTransferListener(new TransferListener() {
+                @Override
+                public void onStateChanged(int id, TransferState state) {
+                    if (TransferState.COMPLETED == state) {
+                        Log.i("Quang.listener", "transfer state is " + state.toString());
+                        Handler mainThread = new Handler(Looper.getMainLooper()) {
+                            @Override
+                            public void handleMessage(Message inputMessage) {
+                                taskImage.setImageBitmap(BitmapFactory.decodeFile(new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileKey).getAbsolutePath()));
+                                taskImage.setVisibility(View.VISIBLE);
+                            }
+                        };
+                        mainThread.obtainMessage().sendToTarget();
+                    }
                 }
-            }
 
-            @Override
-            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+                @Override
+                public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
 
-            }
+                }
 
-            @Override
-            public void onError(int id, Exception ex) {
-                Log.e("Quang.listener", ex.getMessage());
-            }
-        });
+                @Override
+                public void onError(int id, Exception ex) {
+                    Log.e("Quang.listener", ex.getMessage());
+                }
+            });
+        }
+
         taskDetailTitle.setText(title);
         taskDetailDescription.setText(description);
         taskDetailState.setText(state);

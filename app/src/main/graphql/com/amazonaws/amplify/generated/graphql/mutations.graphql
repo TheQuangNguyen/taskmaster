@@ -5,7 +5,7 @@ mutation CreateTask($input: CreateTaskInput!) {
     title
     body
     state
-    attachFileUri
+    fileKey
     team {
       id
       name
@@ -15,7 +15,7 @@ mutation CreateTask($input: CreateTaskInput!) {
           title
           body
           state
-          attachFileUri
+          fileKey
           team {
             id
             name
@@ -32,7 +32,7 @@ mutation UpdateTask($input: UpdateTaskInput!) {
     title
     body
     state
-    attachFileUri
+    fileKey
     team {
       id
       name
@@ -42,7 +42,7 @@ mutation UpdateTask($input: UpdateTaskInput!) {
           title
           body
           state
-          attachFileUri
+          fileKey
           team {
             id
             name
@@ -59,7 +59,7 @@ mutation DeleteTask($input: DeleteTaskInput!) {
     title
     body
     state
-    attachFileUri
+    fileKey
     team {
       id
       name
@@ -69,7 +69,7 @@ mutation DeleteTask($input: DeleteTaskInput!) {
           title
           body
           state
-          attachFileUri
+          fileKey
           team {
             id
             name
@@ -90,7 +90,7 @@ mutation CreateTeam($input: CreateTeamInput!) {
         title
         body
         state
-        attachFileUri
+        fileKey
         team {
           id
           name
@@ -113,7 +113,7 @@ mutation UpdateTeam($input: UpdateTeamInput!) {
         title
         body
         state
-        attachFileUri
+        fileKey
         team {
           id
           name
@@ -136,7 +136,7 @@ mutation DeleteTeam($input: DeleteTeamInput!) {
         title
         body
         state
-        attachFileUri
+        fileKey
         team {
           id
           name

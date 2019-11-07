@@ -182,14 +182,16 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
                 .build();
         CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
         awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
-        TransferObserver uploadObserver = transferUtility.upload(UUID.randomUUID().toString(), new File(this.filePath));
+        String fileKey = UUID.randomUUID().toString();
+        TransferObserver uploadObserver = transferUtility.upload(fileKey, new File(this.filePath));
+
 
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
                 .title(title)
                 .body(description)
                 .state(state)
                 .taskTeamId(selectedTeam.id())
-                .attachFileUri(fileUri.toString())
+                .fileKey(fileKey)
                 .build();
         awsAppSyncClient.mutate(CreateTaskMutation.builder().input(createTaskInput).build())
                 .enqueue(addTaskCallBack);
