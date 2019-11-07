@@ -3,7 +3,7 @@ type Task @model {
   title: String!
   body: String
   state: TaskState!
-  file: S3Object
+  attachFileUri: String
   team: Team @connection(name:"TeamTasks")
 }
 

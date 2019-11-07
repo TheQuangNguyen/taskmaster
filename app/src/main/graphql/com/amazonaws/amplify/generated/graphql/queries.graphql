@@ -5,13 +5,22 @@ query GetTask($id: ID!) {
     title
     body
     state
-    file {
-      ...S3Object
-    }
+    attachFileUri
     team {
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          attachFileUri
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }
@@ -28,12 +37,20 @@ query ListTasks(
       title
       body
       state
-      file {
-        ...S3Object
-      }
+      attachFileUri
       team {
         id
         name
+        tasks {
+          items {
+            id
+            title
+            body
+            state
+            attachFileUri
+          }
+          nextToken
+        }
       }
     }
     nextToken
@@ -49,6 +66,14 @@ query GetTeam($id: ID!) {
         title
         body
         state
+        attachFileUri
+        team {
+          id
+          name
+          tasks {
+            nextToken
+          }
+        }
       }
       nextToken
     }
@@ -64,6 +89,17 @@ query ListTeams(
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          attachFileUri
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }

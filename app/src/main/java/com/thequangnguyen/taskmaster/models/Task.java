@@ -26,25 +26,28 @@ public class Task {
     private String body;
     private type.TaskState state;
     private Team team;
-    private S3Object file;
+    private String fileUri;
 
-    public Task(String title, String body, type.TaskState state, Team team) {
+    public Task(String title, String body, type.TaskState state, Team team, String fileUri) {
         this.title = title;
         this.body = body;
         this.state = state;
         this.team = team;
+        this.fileUri = fileUri;
     }
 
     public Task(ListTasksQuery.Item task) {
         this.title = task.title();
         this.body = task.body();
         this.state = task.state();
+        this.fileUri = task.attachFileUri();
     }
 
     public Task(GetTeamQuery.Item task) {
         this.title = task.title();
         this.body = task.body();
         this.state = task.state();
+        this.fileUri = task.attachFileUri();
     }
 
     public Task() {}
@@ -89,12 +92,12 @@ public class Task {
         this.team = team;
     }
 
-    public S3Object getFile() {
-        return file;
+    public String getFileUri() {
+        return fileUri;
     }
 
-    public void setFile(S3Object file) {
-        this.file = file;
+    public void setFileUri(String fileUri) {
+        this.fileUri = fileUri;
     }
 
     //    public long getLocalId() {
