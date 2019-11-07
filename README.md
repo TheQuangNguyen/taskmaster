@@ -14,7 +14,7 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-<img src="screenshots/home-page.PNG">
+<img src="screenshots/home-page.PNG" width="150">
 
 ### Wednesday 10/23/2019
 
@@ -26,7 +26,7 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-<img src="screenshots/task-detail.PNG">
+<img src="screenshots/task-detail.PNG" width="150">
 
 ### Thursday 10/24/2019 
 
@@ -38,7 +38,7 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-<img src="screenshots/recycler-home-page.PNG">
+<img src="screenshots/recycler-home-page.PNG" width="150">
 
 ### Friday 10/25/2019 
 
