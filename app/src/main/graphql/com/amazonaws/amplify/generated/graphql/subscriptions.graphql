@@ -5,13 +5,22 @@ subscription OnCreateTask {
     title
     body
     state
-    file {
-      ...S3Object
-    }
+    fileKey
     team {
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          fileKey
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }
@@ -23,13 +32,22 @@ subscription OnUpdateTask {
     title
     body
     state
-    file {
-      ...S3Object
-    }
+    fileKey
     team {
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          fileKey
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }
@@ -41,13 +59,22 @@ subscription OnDeleteTask {
     title
     body
     state
-    file {
-      ...S3Object
-    }
+    fileKey
     team {
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          fileKey
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }
@@ -63,6 +90,14 @@ subscription OnCreateTeam {
         title
         body
         state
+        fileKey
+        team {
+          id
+          name
+          tasks {
+            nextToken
+          }
+        }
       }
       nextToken
     }
@@ -78,6 +113,14 @@ subscription OnUpdateTeam {
         title
         body
         state
+        fileKey
+        team {
+          id
+          name
+          tasks {
+            nextToken
+          }
+        }
       }
       nextToken
     }
@@ -93,6 +136,14 @@ subscription OnDeleteTeam {
         title
         body
         state
+        fileKey
+        team {
+          id
+          name
+          tasks {
+            nextToken
+          }
+        }
       }
       nextToken
     }

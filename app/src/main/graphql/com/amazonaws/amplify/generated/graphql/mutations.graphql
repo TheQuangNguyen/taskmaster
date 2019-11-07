@@ -5,13 +5,22 @@ mutation CreateTask($input: CreateTaskInput!) {
     title
     body
     state
-    file {
-      ...S3Object
-    }
+    fileKey
     team {
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          fileKey
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }
@@ -23,13 +32,22 @@ mutation UpdateTask($input: UpdateTaskInput!) {
     title
     body
     state
-    file {
-      ...S3Object
-    }
+    fileKey
     team {
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          fileKey
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }
@@ -41,13 +59,22 @@ mutation DeleteTask($input: DeleteTaskInput!) {
     title
     body
     state
-    file {
-      ...S3Object
-    }
+    fileKey
     team {
       id
       name
       tasks {
+        items {
+          id
+          title
+          body
+          state
+          fileKey
+          team {
+            id
+            name
+          }
+        }
         nextToken
       }
     }
@@ -63,6 +90,14 @@ mutation CreateTeam($input: CreateTeamInput!) {
         title
         body
         state
+        fileKey
+        team {
+          id
+          name
+          tasks {
+            nextToken
+          }
+        }
       }
       nextToken
     }
@@ -78,6 +113,14 @@ mutation UpdateTeam($input: UpdateTeamInput!) {
         title
         body
         state
+        fileKey
+        team {
+          id
+          name
+          tasks {
+            nextToken
+          }
+        }
       }
       nextToken
     }
@@ -93,6 +136,14 @@ mutation DeleteTeam($input: DeleteTeamInput!) {
         title
         body
         state
+        fileKey
+        team {
+          id
+          name
+          tasks {
+            nextToken
+          }
+        }
       }
       nextToken
     }

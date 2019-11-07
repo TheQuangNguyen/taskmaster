@@ -1,8 +1,10 @@
 package com.thequangnguyen.taskmaster.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.room.Room;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -78,6 +80,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     private static final int READ_REQUEST_CODE = 42;
     private String filePath;
     TransferUtility transferUtility;
+    Uri fileUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,10 +88,14 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         setContentView(R.layout.activity_add_task);
         inputTaskTitle = findViewById(R.id.input_task_title);
         inputTaskDescription = findViewById(R.id.input_task_description);
+
+        getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+
         // connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
                 .context(getApplicationContext())
-                .awsConfiguration(new AWSConfiguration(getApplicationContext())).
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
 
         transferUtility =
@@ -174,13 +181,17 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
                 .localUri(this.filePath)
                 .build();
         CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
-        awsAppSyncClient.mutate(s3Object);
+        awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
+        String fileKey = UUID.randomUUID().toString();
+        TransferObserver uploadObserver = transferUtility.upload(fileKey, new File(this.filePath));
+
 
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
                 .title(title)
                 .body(description)
                 .state(state)
                 .taskTeamId(selectedTeam.id())
+                .fileKey(fileKey)
                 .build();
         awsAppSyncClient.mutate(CreateTaskMutation.builder().input(createTaskInput).build())
                 .enqueue(addTaskCallBack);
@@ -278,10 +289,10 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
             // Instead, a URI to that document will be contained in the return intent
             // provided to this method as a parameter.
             // Pull that URI using resultData.getData().
-            Uri selectedFile = resultData.getData();
-            Log.i("filepath", selectedFile.toString());
+            fileUri = resultData.getData();
+            Log.i("filepath", fileUri.toString());
             String[] filePathColumn = {MediaStore.Images.Media.DATA};
-            Cursor cursor = getContentResolver().query(selectedFile,
+            Cursor cursor = getContentResolver().query(fileUri,
                     filePathColumn, null, null, null);
             cursor.moveToFirst();
             int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
@@ -289,10 +300,9 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
             this.filePath = cursor.getString(columnIndex);
             Log.i("filepath", "" + this.filePath);
             cursor.close();
-//            this.filePath = selectedFile.toString();
-            uploadFiles();
+//            uploadFiles();
 
-            Toast toast = Toast.makeText(this, R.string.submitted_message, Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(this, "Attached!", Toast.LENGTH_SHORT);
             toast.show();
         }
     }
@@ -306,32 +316,32 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
                 .localUri(this.filePath)
                 .build();
         CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
-        awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
+        awsAppSyncClient.mutate(s3Object);
         TransferObserver uploadObserver = transferUtility.upload("testFile", new File(this.filePath));
-        uploadObserver.setTransferListener(new TransferListener() {
-
-            @Override
-            public void onStateChanged(int id, TransferState state) {
-                if (TransferState.COMPLETED == state) {
-                    Log.i("filepath", "completed");
-                }
-            }
-
-            @Override
-            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
-                float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
-                int percentDone = (int)percentDonef;
-
-                Log.d(TAG, "ID:" + id + " bytesCurrent: " + bytesCurrent
-                        + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
-            }
-
-            @Override
-            public void onError(int id, Exception ex) {
-                Log.e("filepath", ex.getMessage());
-            }
-
-        });
+//        uploadObserver.setTransferListener(new TransferListener() {
+//
+//            @Override
+//            public void onStateChanged(int id, TransferState state) {
+//                if (TransferState.COMPLETED == state) {
+//                    Log.i("filepath", "completed");
+//                }
+//            }
+//
+//            @Override
+//            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+//                float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
+//                int percentDone = (int)percentDonef;
+//
+//                Log.d(TAG, "ID:" + id + " bytesCurrent: " + bytesCurrent
+//                        + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
+//            }
+//
+//            @Override
+//            public void onError(int id, Exception ex) {
+//                Log.e("filepath", ex.getMessage());
+//            }
+//
+//        });
     }
 
     public GraphQLCall.Callback<CreateS3ObjectMutation.Data> uploadFileCallBack = new GraphQLCall.Callback<CreateS3ObjectMutation.Data>() {

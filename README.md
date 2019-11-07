@@ -14,7 +14,7 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-<img src="screenshots/home-page.PNG" width="150">
+<img src="screenshots/home-page.PNG" width="200">
 
 ### Wednesday 10/23/2019
 
@@ -26,7 +26,7 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-<img src="screenshots/task-detail.PNG" width="150">
+<img src="screenshots/task-detail.PNG" width="200">
 
 ### Thursday 10/24/2019 
 
@@ -38,7 +38,8 @@ This android app will track all the tasks that a user need to do and allow user 
 
 #### Images
 
-<img src="screenshots/recycler-home-page.PNG" width="150">
+
+<img src="screenshots/recycler-home-page.PNG" width="200">
 
 ### Friday 10/25/2019 
 
@@ -90,3 +91,15 @@ This android app will track all the tasks that a user need to do and allow user 
 * Display the logged in user’s username on the main page
 * Allow users to log out of your application.
 
+### Wednesday 11/6/2019
+
+#### What I Worked On
+
+* Figure out how to upload images into S3 bucket
+
+### Thursday 11/7/2019
+
+#### What I Worked On
+
+* On the “Add a Task” activity, allow users to optionally select a file to attach to that task. If a user attaches a file to a task, that file should be uploaded to S3, and associated with that task.
+* On the Task detail activity, if there is a file that is an image associated with a particular Task, that image should be displayed within that activity.
