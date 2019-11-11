@@ -47,7 +47,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.0.0'
 
     //For AWSMobileClient only:
-    implementation 'com.amazonaws:aws-android-sdk-mobile-client:2.15.+'
+    implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
 
 //For the drop-in UI also:
     implementation 'com.amazonaws:aws-android-sdk-auth-userpools:2.15.+'
@@ -55,4 +55,14 @@ dependencies {
 
     // S3
     implementation 'com.amazonaws:aws-android-sdk-s3:2.15.+'
+
+    implementation 'com.google.android.gms:play-services-auth:15.0.1'
+
+    implementation 'com.google.firebase:firebase-core:16.0.1'
+    implementation 'com.google.firebase:firebase-messaging:17.3.0'
+
+    implementation 'com.amazonaws:aws-android-sdk-pinpoint:2.15.+'
+
 }
+
+apply plugin: 'com.google.gms.google-services'
