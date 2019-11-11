@@ -88,6 +88,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         setContentView(R.layout.activity_add_task);
         inputTaskTitle = findViewById(R.id.input_task_title);
         inputTaskDescription = findViewById(R.id.input_task_description);
+        this.filePath = null;
 
         getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
@@ -174,17 +175,19 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
 
     // insert a new task
     public void runAddTaskMutation(String title, String description, type.TaskState state, ListTeamsQuery.Item selectedTeam) {
-        CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
-                .bucket("taskmasterfiles")
-                .key("public/" + UUID.randomUUID().toString())
-                .region("us-west-2")
-                .localUri(this.filePath)
-                .build();
-        CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
-        awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
-        String fileKey = UUID.randomUUID().toString();
-        TransferObserver uploadObserver = transferUtility.upload(fileKey, new File(this.filePath));
-
+        String fileKey = null;
+        if (this.filePath != null) {
+            CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
+                    .bucket("taskmasterfiles")
+                    .key("public/" + UUID.randomUUID().toString())
+                    .region("us-west-2")
+                    .localUri(this.filePath)
+                    .build();
+            CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
+            awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
+            fileKey = UUID.randomUUID().toString();
+            TransferObserver uploadObserver = transferUtility.upload(fileKey, new File(this.filePath));
+        }
 
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
                 .title(title)
