@@ -35,6 +35,13 @@ public class Task {
         this.team = team;
         this.fileKey = fileKey;
     }
+    public Task(String title, String body, type.TaskState state, Team team) {
+        this.title = title;
+        this.body = body;
+        this.state = state;
+        this.team = team;
+        this.fileKey = null;
+    }
 
     public Task(ListTasksQuery.Item task) {
         this.title = task.title();

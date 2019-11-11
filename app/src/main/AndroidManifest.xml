@@ -20,6 +20,12 @@
         android:theme="@style/AppTheme">
         <service android:name="org.eclipse.paho.android.service.MqttService" />
         <service android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService" android:enabled="true" />
+        <service
+            android:name="com.thequangnguyen.taskmaster.models.PushListenerService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
         <activity android:name=".activities.Settings"></activity>
         <activity android:name=".activities.TaskDetail" />
         <activity android:name=".activities.AddTeam" />
