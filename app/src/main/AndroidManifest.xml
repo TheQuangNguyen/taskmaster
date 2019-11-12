@@ -21,7 +21,7 @@
         <service android:name="org.eclipse.paho.android.service.MqttService" />
         <service android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService" android:enabled="true" />
         <service
-            android:name="com.thequangnguyen.taskmaster.models.PushListenerService">
+            android:name=".models.PushListenerService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
@@ -29,11 +29,16 @@
         <activity android:name=".activities.Settings"></activity>
         <activity android:name=".activities.TaskDetail" />
         <activity android:name=".activities.AddTeam" />
-        <activity android:name=".activities.AddTask" />
+        <activity android:name=".activities.AddTask">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="image/*"/>
+            </intent-filter>
+        </activity>
         <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
