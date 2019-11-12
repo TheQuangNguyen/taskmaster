@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -19,6 +20,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -49,7 +51,11 @@ import com.thequangnguyen.taskmaster.models.Team;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -81,11 +87,25 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     private String filePath;
     TransferUtility transferUtility;
     Uri fileUri;
+    ImageView attachedImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_task);
+
+        // get the intent that started the activity and filter intents with image data
+        Intent intent = getIntent();
+        attachedImage = findViewById(R.id.attached_image_view);
+        attachedImage.setVisibility(View.INVISIBLE);
+        if (intent.getType() != null && intent.getType().indexOf("image/") != -1) {
+            fileUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (fileUri != null) {
+                attachedImage.setImageURI(fileUri);
+                attachedImage.setVisibility(View.VISIBLE);
+            }
+        }
+
         inputTaskTitle = findViewById(R.id.input_task_title);
         inputTaskDescription = findViewById(R.id.input_task_description);
         this.filePath = null;
@@ -108,7 +128,6 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
 
 
         getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
-
 
         this.teams = new LinkedList<>();
         queryAllTeams();
@@ -175,18 +194,70 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
 
     // insert a new task
     public void runAddTaskMutation(String title, String description, type.TaskState state, ListTeamsQuery.Item selectedTeam) {
-        String fileKey = null;
+        String fileKey = UUID.randomUUID().toString();
+        this.filePath = convertUriToFilePath(fileUri);
         if (this.filePath != null) {
             CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
                     .bucket("taskmasterfiles")
-                    .key("public/" + UUID.randomUUID().toString())
+                    .key("public/" + fileKey)
                     .region("us-west-2")
                     .localUri(this.filePath)
                     .build();
             CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
             awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
-            fileKey = UUID.randomUUID().toString();
             TransferObserver uploadObserver = transferUtility.upload(fileKey, new File(this.filePath));
+        } else {
+            File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileKey);
+            try{
+                InputStream input = getApplicationContext().getContentResolver().openInputStream(fileUri);
+                OutputStream output = new FileOutputStream(file);
+//                byte[] buffer = new byte[4 * 1024]; // or other buffer size
+//                int read;
+//
+//                while ((read = input.read(buffer)) != -1) {
+//                    output.write(buffer, 0, read);
+//                }
+                byte[] buffer = new byte[input.available()];
+                input.read(buffer);
+
+                OutputStream outputStream = new FileOutputStream(file);
+                outputStream.write(buffer);
+
+                output.flush();
+                input.close();
+            } catch(IOException e) {
+                Log.e(TAG, e.getMessage());
+            }
+
+            CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
+                    .bucket("taskmasterfiles")
+                    .key("public/" + UUID.randomUUID().toString())
+                    .region("us-west-2")
+                    .localUri(fileUri.toString())
+                    .build();
+            CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
+            awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
+            fileKey = UUID.randomUUID().toString();
+            TransferObserver uploadObserver = transferUtility.upload(fileKey, file);
+
+//            File f = new File(getFilesDir(), "tmp");
+//
+//            try {
+//                InputStream inputStream = getContentResolver().openInputStream(fileUri);
+//                byte[] buffer = new byte[inputStream.available()];
+//                inputStream.read(buffer);
+//
+//                OutputStream outputStream = new FileOutputStream(f);
+//                outputStream.write(buffer);
+//
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//                Log.e(TAG, e.getMessage());
+//            } catch (IOException e){
+//                e.printStackTrace();
+//                Log.e(TAG, e.getMessage());
+//            }
+
         }
 
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
@@ -293,34 +364,50 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
             // provided to this method as a parameter.
             // Pull that URI using resultData.getData().
             fileUri = resultData.getData();
-            Log.i("filepath", fileUri.toString());
-            String[] filePathColumn = {MediaStore.Images.Media.DATA};
-            Cursor cursor = getContentResolver().query(fileUri,
-                    filePathColumn, null, null, null);
-            cursor.moveToFirst();
-            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            // String filePath contains the path of selected file
-            this.filePath = cursor.getString(columnIndex);
-            Log.i("filepath", "" + this.filePath);
-            cursor.close();
+//            Log.i("filepath", fileUri.toString());
+//            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+//            Cursor cursor = getContentResolver().query(fileUri,
+//                    filePathColumn, null, null, null);
+//            cursor.moveToFirst();
+//            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+//            // String filePath contains the path of selected file
+//            this.filePath = cursor.getString(columnIndex);
+//            Log.i("filepath", "" + this.filePath);
+//            cursor.close();
 //            uploadFiles();
 
+            attachedImage.setImageURI(fileUri);
+            attachedImage.setVisibility(View.VISIBLE);
             Toast toast = Toast.makeText(this, "Attached!", Toast.LENGTH_SHORT);
             toast.show();
         }
     }
 
+    private String convertUriToFilePath(Uri uri) {
+        Log.i("filepath", uri.toString());
+        String[] filePathColumn = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getContentResolver().query(uri,
+                filePathColumn, null, null, null);
+        cursor.moveToFirst();
+        int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+        // String filePath contains the path of selected file
+        String filePath = cursor.getString(columnIndex);
+        Log.i("filepath", "" + filePath);
+        cursor.close();
+        return filePath;
+    }
+
     //
-    public void uploadFiles() {
-        CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
-                .bucket("taskmasterfiles-local")
-                .key("public/" + UUID.randomUUID().toString())
-                .region("us-west-2")
-                .localUri(this.filePath)
-                .build();
-        CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
-        awsAppSyncClient.mutate(s3Object);
-        TransferObserver uploadObserver = transferUtility.upload("testFile", new File(this.filePath));
+//    public void uploadFiles() {
+//        CreateS3ObjectInput s3ObjectInput = CreateS3ObjectInput.builder()
+//                .bucket("taskmasterfiles-local")
+//                .key("public/" + UUID.randomUUID().toString())
+//                .region("us-west-2")
+//                .localUri(this.filePath)
+//                .build();
+//        CreateS3ObjectMutation s3Object = CreateS3ObjectMutation.builder().input(s3ObjectInput).build();
+//        awsAppSyncClient.mutate(s3Object);
+//        TransferObserver uploadObserver = transferUtility.upload("testFile", new File(this.filePath));
 //        uploadObserver.setTransferListener(new TransferListener() {
 //
 //            @Override
@@ -345,7 +432,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
 //            }
 //
 //        });
-    }
+//    }
 
     public GraphQLCall.Callback<CreateS3ObjectMutation.Data> uploadFileCallBack = new GraphQLCall.Callback<CreateS3ObjectMutation.Data>() {
         @Override
