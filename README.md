@@ -111,3 +111,10 @@ This android app will track all the tasks that a user need to do and allow user 
 * Enable application to recieve notifications sent from AWS Pinpoint console 
 
 <img src="screenshots/notification.PNG" width="200">
+
+### Tueday 11/12/2019
+
+#### What I Worked On
+
+* Enable images to be shared to taskmaster from other apps and have the images to automatically attached as a part of creating a new task. 
+* Have the image from other apps be uploaded and downloaded from S3 correctly
