@@ -56,7 +56,7 @@ import javax.annotation.Nonnull;
 
 public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTaskInteractionListener, AdapterView.OnItemSelectedListener {
 
-    private static final String TAG = "qyoung.mainActivity";
+    private static final String TAG = "qyoung.mainactivity";
     private static final String COGNITO = "COGNITO";
     private List<Task> tasks;
 //    public AppDatabase db;
@@ -205,10 +205,12 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     @Override
     public void redirectToTaskDetailPage(Task task) {
         Intent taskDetailIntent = new Intent(this, TaskDetail.class);
+        taskDetailIntent.putExtra("id", task.getId());
         taskDetailIntent.putExtra("title", "" + task.getTitle());
         taskDetailIntent.putExtra("description", "" + task.getBody());
         taskDetailIntent.putExtra("state", "" + task.getState());
         taskDetailIntent.putExtra("fileKey", task.getFileKey());
+        taskDetailIntent.putExtra("location", task.getLocation());
         startActivity(taskDetailIntent);
     }
 

@@ -319,6 +319,18 @@
                         "deprecationReason": null
                     },
                     {
+                        "name": "location",
+                        "description": null,
+                        "args": [],
+                        "type": {
+                            "kind": "SCALAR",
+                            "name": "String",
+                            "ofType": null
+                        },
+                        "isDeprecated": false,
+                        "deprecationReason": null
+                    },
+                    {
                         "name": "team",
                         "description": null,
                         "args": [],
@@ -525,6 +537,16 @@
                     },
                     {
                         "name": "fileKey",
+                        "description": null,
+                        "type": {
+                            "kind": "INPUT_OBJECT",
+                            "name": "ModelStringFilterInput",
+                            "ofType": null
+                        },
+                        "defaultValue": null
+                    },
+                    {
+                        "name": "location",
                         "description": null,
                         "type": {
                             "kind": "INPUT_OBJECT",
@@ -1557,6 +1579,16 @@
                         "defaultValue": null
                     },
                     {
+                        "name": "location",
+                        "description": null,
+                        "type": {
+                            "kind": "SCALAR",
+                            "name": "String",
+                            "ofType": null
+                        },
+                        "defaultValue": null
+                    },
+                    {
                         "name": "taskTeamId",
                         "description": null,
                         "type": {
@@ -1623,6 +1655,16 @@
                     },
                     {
                         "name": "fileKey",
+                        "description": null,
+                        "type": {
+                            "kind": "SCALAR",
+                            "name": "String",
+                            "ofType": null
+                        },
+                        "defaultValue": null
+                    },
+                    {
+                        "name": "location",
                         "description": null,
                         "type": {
                             "kind": "SCALAR",

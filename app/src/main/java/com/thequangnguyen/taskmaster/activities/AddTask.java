@@ -8,6 +8,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -43,6 +46,9 @@ import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.api.Operation;
 import com.apollographql.apollo.cache.CacheHeaders;
 import com.apollographql.apollo.exception.ApolloException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.thequangnguyen.taskmaster.R;
 //import com.thequangnguyen.taskmaster.models.AppDatabase;
 import com.thequangnguyen.taskmaster.models.Task;
@@ -58,6 +64,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -74,6 +81,8 @@ import okhttp3.Response;
 import type.CreateS3ObjectInput;
 import type.CreateTaskInput;
 
+import static android.Manifest.permission.*;
+
 public class AddTask extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private EditText inputTaskTitle;
@@ -82,17 +91,22 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     AWSAppSyncClient awsAppSyncClient;
     List<ListTeamsQuery.Item> teams;
     ListTeamsQuery.Item selectedTeam;
-    private static final String TAG = "nguyen.AddTaskActivity";
+    private static final String TAG = "nguyen.addatask";
     private static final int READ_REQUEST_CODE = 42;
     private String filePath;
     TransferUtility transferUtility;
     Uri fileUri;
     ImageView attachedImage;
+    private FusedLocationProviderClient fusedLocationClient;
+    private String currentLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_task);
+
+        // client for google location services
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         // get the intent that started the activity and filter intents with image data
         Intent intent = getIntent();
@@ -111,7 +125,8 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         this.filePath = null;
 
         getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+        ActivityCompat.requestPermissions(this, new String[]{READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 1);
+
 
         // connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
@@ -132,6 +147,34 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
         this.teams = new LinkedList<>();
         queryAllTeams();
 //        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "taskmaster").allowMainThreadQueries().build();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(final Location location) {
+
+                if (location != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Geocoder geocoder = new Geocoder(AddTask.this, Locale.getDefault());
+                            try {
+                                List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                                currentLocation = addresses.get(0).getAddressLine(0);
+                                currentLocation = currentLocation + " | lat:" + location.getLatitude() + ", long: " + location.getLongitude();
+                            } catch (IOException e) {
+                                Log.e(TAG, e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
+                    }).run();
+                }
+            }
+        });
     }
 
     public void showSubmittedMessage(View view) {
@@ -239,25 +282,6 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
             awsAppSyncClient.mutate(s3Object).enqueue(uploadFileCallBack);
             fileKey = UUID.randomUUID().toString();
             TransferObserver uploadObserver = transferUtility.upload(fileKey, file);
-
-//            File f = new File(getFilesDir(), "tmp");
-//
-//            try {
-//                InputStream inputStream = getContentResolver().openInputStream(fileUri);
-//                byte[] buffer = new byte[inputStream.available()];
-//                inputStream.read(buffer);
-//
-//                OutputStream outputStream = new FileOutputStream(f);
-//                outputStream.write(buffer);
-//
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//                Log.e(TAG, e.getMessage());
-//            } catch (IOException e){
-//                e.printStackTrace();
-//                Log.e(TAG, e.getMessage());
-//            }
-
         }
 
         CreateTaskInput createTaskInput = CreateTaskInput.builder()
@@ -266,6 +290,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
                 .state(state)
                 .taskTeamId(selectedTeam.id())
                 .fileKey(fileKey)
+                .location(currentLocation)
                 .build();
         awsAppSyncClient.mutate(CreateTaskMutation.builder().input(createTaskInput).build())
                 .enqueue(addTaskCallBack);

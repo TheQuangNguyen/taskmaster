@@ -6,6 +6,7 @@ query GetTask($id: ID!) {
     body
     state
     fileKey
+    location
     team {
       id
       name
@@ -16,6 +17,7 @@ query GetTask($id: ID!) {
           body
           state
           fileKey
+          location
           team {
             id
             name
@@ -38,6 +40,7 @@ query ListTasks(
       body
       state
       fileKey
+      location
       team {
         id
         name
@@ -48,6 +51,7 @@ query ListTasks(
             body
             state
             fileKey
+            location
           }
           nextToken
         }
@@ -67,6 +71,7 @@ query GetTeam($id: ID!) {
         body
         state
         fileKey
+        location
         team {
           id
           name
@@ -95,6 +100,7 @@ query ListTeams(
           body
           state
           fileKey
+          location
           team {
             id
             name

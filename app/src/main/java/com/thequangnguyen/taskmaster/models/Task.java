@@ -21,19 +21,21 @@ public class Task {
 //{
 //    NEW,ASSIGNED,IN_PROGRESS,COMPLETE
 //}
-
+    private String id;
     private String title;
     private String body;
     private type.TaskState state;
     private Team team;
     private String fileKey;
+    private String location;
 
-    public Task(String title, String body, type.TaskState state, Team team, String fileKey) {
+    public Task(String title, String body, type.TaskState state, Team team, String fileKey, String location) {
         this.title = title;
         this.body = body;
         this.state = state;
         this.team = team;
         this.fileKey = fileKey;
+        this.location = location;
     }
     public Task(String title, String body, type.TaskState state, Team team) {
         this.title = title;
@@ -41,20 +43,25 @@ public class Task {
         this.state = state;
         this.team = team;
         this.fileKey = null;
+        this.location = null;
     }
 
     public Task(ListTasksQuery.Item task) {
+        this.id = task.id();
         this.title = task.title();
         this.body = task.body();
         this.state = task.state();
         this.fileKey = task.fileKey();
+        this.location = task.location();
     }
 
     public Task(GetTeamQuery.Item task) {
+        this.id = task.id();
         this.title = task.title();
         this.body = task.body();
         this.state = task.state();
         this.fileKey = task.fileKey();
+        this.location = task.location();
     }
 
     public Task() {}
@@ -105,6 +112,18 @@ public class Task {
 
     public void setFileKey(String fileUri) {
         this.fileKey = fileUri;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getId() {
+        return id;
     }
 
     //    public long getLocalId() {
