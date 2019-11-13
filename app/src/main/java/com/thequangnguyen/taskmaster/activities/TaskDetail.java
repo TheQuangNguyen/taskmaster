@@ -15,22 +15,34 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.amazonaws.amplify.generated.graphql.CreateTaskMutation;
 import com.amazonaws.amplify.generated.graphql.DeleteTaskMutation;
 import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.exception.ApolloException;
 import com.thequangnguyen.taskmaster.R;
 //import com.thequangnguyen.taskmaster.models.AppDatabase;
 import com.thequangnguyen.taskmaster.models.Task;
 
 import java.io.File;
 
+import javax.annotation.Nonnull;
+
+import type.DeleteTaskInput;
+
 public class TaskDetail extends AppCompatActivity {
 
 //    public AppDatabase db;
+    private String taskId;
+    AWSAppSyncClient awsAppSyncClient;
+    final String TAG = "quang.taskdetail";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +55,11 @@ public class TaskDetail extends AppCompatActivity {
                         .awsConfiguration(AWSMobileClient.getInstance().getConfiguration())
                         .s3Client(new AmazonS3Client(AWSMobileClient.getInstance()))
                         .build();
+
+        awsAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .build();
 
 //        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "taskmaster")
 //                .allowMainThreadQueries().build();
@@ -59,6 +76,8 @@ public class TaskDetail extends AppCompatActivity {
         String state = getIntent().getStringExtra("state");
         final String fileKey = getIntent().getStringExtra("fileKey");
         String location = getIntent().getStringExtra("location");
+        taskId = getIntent().getStringExtra("id");
+        Log.i(TAG, taskId);
         TextView taskDetailTitle = findViewById(R.id.task_detail_title);
         TextView taskDetailDescription = findViewById(R.id.task_description);
         TextView taskDetailState = findViewById(R.id.task_state);
@@ -91,7 +110,7 @@ public class TaskDetail extends AppCompatActivity {
 
                 @Override
                 public void onError(int id, Exception ex) {
-                    Log.e("Quang.listener", ex.getMessage());
+                    Log.e(TAG, ex.getMessage());
                 }
             });
         }
@@ -100,13 +119,26 @@ public class TaskDetail extends AppCompatActivity {
         taskDetailDescription.setText("Task Description: " + description);
         taskDetailState.setText("Task State: " + state);
         if (location != null) {
-            taskDetailLocation.setText("Task Location :" + location);
+            taskDetailLocation.setText("Task Location: " + location);
         } else {
             taskDetailLocation.setText("Task Location: Not Available");
         }
     }
 
-//    public void deleteTask(View view) {
-//        DeleteTaskMutation deleteTaskMutation = DeleteTaskMutation.builder().
-//    }
+    public void deleteTask(View view) {
+        DeleteTaskInput deleteTaskInput = DeleteTaskInput.builder().id(taskId).build();
+        awsAppSyncClient.mutate(DeleteTaskMutation.builder().input(deleteTaskInput).build()).enqueue(deleteTaskCallBack);
+    }
+
+    public GraphQLCall.Callback<DeleteTaskMutation.Data> deleteTaskCallBack = new GraphQLCall.Callback<DeleteTaskMutation.Data>() {
+        @Override
+        public void onResponse(@Nonnull com.apollographql.apollo.api.Response<DeleteTaskMutation.Data> response) {
+            finish();
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    };
 }

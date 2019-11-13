@@ -118,3 +118,12 @@ This android app will track all the tasks that a user need to do and allow user 
 
 * Enable images to be shared to taskmaster from other apps and have the images to automatically attached as a part of creating a new task. 
 * Have the image from other apps be uploaded and downloaded from S3 correctly
+
+### Wednesday 11/13/2019
+
+#### What I Worked On 
+
+* Use Google location services to attach an address of the current user location to a task when it is created. 
+* Have the address be displayed on the task detail page
+
+<img src="screenshots/location.PNG" width="200">

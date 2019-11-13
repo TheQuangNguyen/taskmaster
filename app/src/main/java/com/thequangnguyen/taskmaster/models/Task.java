@@ -21,7 +21,7 @@ public class Task {
 //{
 //    NEW,ASSIGNED,IN_PROGRESS,COMPLETE
 //}
-
+    private String id;
     private String title;
     private String body;
     private type.TaskState state;
@@ -47,6 +47,7 @@ public class Task {
     }
 
     public Task(ListTasksQuery.Item task) {
+        this.id = task.id();
         this.title = task.title();
         this.body = task.body();
         this.state = task.state();
@@ -55,6 +56,7 @@ public class Task {
     }
 
     public Task(GetTeamQuery.Item task) {
+        this.id = task.id();
         this.title = task.title();
         this.body = task.body();
         this.state = task.state();
@@ -118,6 +120,10 @@ public class Task {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getId() {
+        return id;
     }
 
     //    public long getLocalId() {
