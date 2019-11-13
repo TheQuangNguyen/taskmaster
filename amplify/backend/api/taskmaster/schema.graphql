@@ -4,6 +4,7 @@ type Task @model {
   body: String
   state: TaskState!
   fileKey: String
+  location: String
   team: Team @connection(name:"TeamTasks")
 }
 

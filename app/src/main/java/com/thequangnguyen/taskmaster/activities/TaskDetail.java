@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.amazonaws.amplify.generated.graphql.DeleteTaskMutation;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -57,10 +58,12 @@ public class TaskDetail extends AppCompatActivity {
         String description = getIntent().getStringExtra("description");
         String state = getIntent().getStringExtra("state");
         final String fileKey = getIntent().getStringExtra("fileKey");
+        String location = getIntent().getStringExtra("location");
         TextView taskDetailTitle = findViewById(R.id.task_detail_title);
         TextView taskDetailDescription = findViewById(R.id.task_description);
         TextView taskDetailState = findViewById(R.id.task_state);
         final ImageView taskImage = findViewById(R.id.task_image);
+        TextView taskDetailLocation = findViewById(R.id.task_location);
 
         if (fileKey != null) {
             TransferObserver observer = transferUtility.download(fileKey, new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileKey));
@@ -94,9 +97,16 @@ public class TaskDetail extends AppCompatActivity {
         }
 
         taskDetailTitle.setText(title);
-        taskDetailDescription.setText(description);
-        taskDetailState.setText(state);
-
-
+        taskDetailDescription.setText("Task Description: " + description);
+        taskDetailState.setText("Task State: " + state);
+        if (location != null) {
+            taskDetailLocation.setText("Task Location :" + location);
+        } else {
+            taskDetailLocation.setText("Task Location: Not Available");
+        }
     }
+
+//    public void deleteTask(View view) {
+//        DeleteTaskMutation deleteTaskMutation = DeleteTaskMutation.builder().
+//    }
 }
