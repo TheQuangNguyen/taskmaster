@@ -127,3 +127,12 @@ This android app will track all the tasks that a user need to do and allow user 
 * Have the address be displayed on the task detail page
 
 <img src="screenshots/location.PNG" width="200">
+
+### Thursday 11/14/2019
+
+#### What I Worked On
+
+* Add Pinpoint analytics that allow tracking user sessions within the application 
+
+<img src="screenshots/analytics1.PNG" width="200">
+<img src="screenshots/analytics2.PNG" width="200">

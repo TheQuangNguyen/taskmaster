@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     SharedPreferences prefs;
     List<ListTeamsQuery.Item> teams;
     ListTeamsQuery.Item selectedTeam;
+    private static PinpointManager pinpointManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +88,8 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
             }
         });
 
-        getPinpointManager(getApplicationContext());
+        pinpointManager = getPinpointManager(getApplicationContext());
+        pinpointManager.getSessionClient().startSession();
 
         setContentView(R.layout.activity_main);
 
@@ -185,6 +187,14 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
 //                .build();
 //
 //        client.newCall(request).enqueue(new GetTasksFromBackendServer(this));
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        pinpointManager.getSessionClient().stopSession();
+        pinpointManager.getAnalyticsClient().submitEvents();
     }
 
     public void redirectToAddTaskActivity(View view) {
@@ -406,8 +416,6 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.OnTas
     }
 
     //////////////////////////////// AWS Pinpoint Service /////////////////////////////////////////
-
-    private static PinpointManager pinpointManager;
 
     public static PinpointManager getPinpointManager(final Context applicationContext) {
         if (pinpointManager == null) {

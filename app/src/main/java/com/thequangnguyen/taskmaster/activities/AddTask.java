@@ -36,6 +36,8 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
+import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
@@ -82,6 +84,7 @@ import type.CreateS3ObjectInput;
 import type.CreateTaskInput;
 
 import static android.Manifest.permission.*;
+import static com.thequangnguyen.taskmaster.activities.MainActivity.getPinpointManager;
 
 public class AddTask extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
@@ -99,6 +102,7 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
     ImageView attachedImage;
     private FusedLocationProviderClient fusedLocationClient;
     private String currentLocation;
+    private static PinpointManager pinpointManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,6 +179,17 @@ public class AddTask extends AppCompatActivity implements AdapterView.OnItemSele
                 }
             }
         });
+
+        pinpointManager = getPinpointManager(getApplicationContext());
+        logSession();
+    }
+
+    // Log a session when user navigate to add a task page
+    public void logSession() {
+        SessionClient sessionClient = pinpointManager.getSessionClient();
+        sessionClient.startSession();
+        sessionClient.stopSession();
+        pinpointManager.getAnalyticsClient().submitEvents();
     }
 
     public void showSubmittedMessage(View view) {

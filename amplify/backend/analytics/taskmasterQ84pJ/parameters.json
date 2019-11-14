@@ -1,0 +1,21 @@
+{
+    "appName": "taskmasterQ84pJ",
+    "roleName": "pinpointLambdaRolea8533e24",
+    "cloudWatchPolicyName": "cloudWatchPolicya8533e24",
+    "pinpointPolicyName": "pinpointPolicya8533e24",
+    "authPolicyName": "pinpoint_amplify_a8533e24",
+    "unauthPolicyName": "pinpoint_amplify_a8533e24",
+    "authRoleName": {
+        "Ref": "AuthRoleName"
+    },
+    "unauthRoleName": {
+        "Ref": "UnauthRoleName"
+    },
+    "authRoleArn": {
+        "Fn::GetAtt": [
+            "AuthRole",
+            "Arn"
+        ]
+    },
+    "appId": "a4614a45b6624263850a3834532ef78b"
+}
